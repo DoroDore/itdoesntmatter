@@ -24,8 +24,14 @@ Day by Day is the first app in a small set of personal Mac apps. Read this befor
   - Signature "forest" surfaces, the same in both themes: `--forest #16392B`, `--forest-deep #0D241A`, `--mint #E4F2E8`, `--mint-dim #8DB59D`. They're used for full-screen moments and the menu bar card.
   - Gold is used only for things that are special: core memories, milestones, ready time capsules, and (in Point by Point) a month where you spent less than the last one, and (in Word by Word) a poem's anniversary. Never for warnings.
 - **Type:** fonts are bundled locally as woff2 in `fonts/` (from @fontsource), never loaded from the web.
-  - Bricolage Grotesque (wght, 800 for big numbers) is the family's display face. Day by Day now uses Newsreader for display too, with big numbers in italic 400 and `lining-nums`, since Newsreader's default figures are old-style.
-  - Newsreader (italic for prompts like "Today I…") is for writing.
+  - Bricolage Grotesque (wght, 800 for big numbers) is the family's display face.
+  - **Day by Day uses one face, Fraunces** (variable: `wght` 100–900, `opsz`, `SOFT`, `WONK`; the "full" files from @fontsource-variable, Latin and Latin Extended). Weight carries the meaning:
+    - writing is light (`--write`, 340), the interface is regular, labels are 650 in spaced capitals, and numbers and headings are 700–850;
+    - display type is soft and a little wonky (`--soft`: `"SOFT" 100, "WONK" 1`), after the hand-lettered posters it's modeled on;
+    - weight is also data: written days are bold on the calendar and empty days light, the word cloud runs 250–900 by how often a word comes up, and the new-day number is thin (200) until you press the button, then fills in to 850;
+    - optical size follows the font size on its own; numbers use `lining-nums`.
+  - The new-day curtain has a printed-card frame (a double rule inset 22px).
+  - Newsreader (italic for prompts like "Today I…") is the family's writing face.
   - JetBrains Mono is for small numeric labels.
   - The system font is used for UI.
 - **Layout:** one centered column (max 680px) under a draggable hidden-inset title strip, with pill tabs at the top right. Cards ("paper") are white surfaces with 1px `--line` borders and 16–22px radius. Uppercase 11px letter-spaced labels. Chips for tags and choices, with `aria-pressed`. Tabular numbers everywhere digits line up.
