@@ -204,6 +204,40 @@ mark{background:var(--wash);color:var(--ink);border-bottom:2px solid var(--accen
 .suggest p{margin:0;font-size:14px}
 .clschip{font-family:var(--mono);font-size:12px}
 
+/* photos of paper journals */
+.photoslot{margin-top:10px;display:grid;gap:8px}
+.photoslot img{display:block;width:100%;max-height:520px;object-fit:contain;border-radius:10px;background:var(--wash)}
+.addphoto{display:inline-flex;align-items:center;gap:8px;border:1px dashed var(--line);background:none;border-radius:999px;padding:7px 14px;font-size:13px;color:var(--muted);justify-self:start}
+.addphoto:hover{border-color:var(--muted);color:var(--ink)}
+.addphoto svg{width:16px;height:16px}
+.paper.over{border-color:var(--accent);background:var(--wash)}
+.thumb{display:block;max-width:100%;max-height:260px;border-radius:10px;border:1px solid var(--line);cursor:zoom-in;object-fit:contain;background:var(--wash)}
+.thumb.big{max-height:none;width:100%;cursor:zoom-out}
+.mem .thumb{grid-column:2;margin:4px 0}
+
+/* friends */
+.sharebox{display:grid;gap:8px;border:1px dashed var(--line);border-radius:16px;padding:12px 16px}
+.sharebox input[type=text]{font-family:var(--body);font-size:16px}
+.fhead{font-family:var(--display);font-weight:600;font-size:24px;margin:0;text-wrap:balance}
+.fcode{font-family:var(--mono);font-weight:600;font-size:30px;letter-spacing:.14em;color:var(--accent);user-select:all}
+.friend{display:grid;gap:8px}
+.friend .ftop{display:flex;align-items:center;gap:10px}
+.friend h3{margin:0;font-family:var(--display);font-weight:600;font-size:19px;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.friend .say{margin:0;font-family:var(--body);font-size:18px;line-height:1.45}
+.friend .say em{color:var(--muted)}
+.pill{font-size:12px;border-radius:999px;padding:3px 10px;background:var(--wash);color:var(--muted);white-space:nowrap}
+.pill.done{background:var(--accent);color:var(--accent-ink);font-weight:600}
+.flist{display:grid;gap:10px}
+.fsum{font-family:var(--display);font-weight:600;font-size:18px;margin:0}
+.friendsline{display:flex;align-items:center;gap:8px 14px;flex-wrap:wrap;width:100%;text-align:left;border:1px solid var(--line);background:var(--surface);border-radius:16px;padding:12px 16px;font-size:14px}
+.friendsline:hover{border-color:var(--muted)}
+.friendsline .who{display:inline-flex;align-items:center;gap:6px;color:var(--muted)}
+.friendsline .who.done{color:var(--ink)}
+.fdot{width:8px;height:8px;border-radius:50%;border:1.5px solid var(--muted);flex:none}
+.done .fdot{background:var(--accent);border-color:var(--accent)}
+.tabdot.accent{background:var(--accent)}
+.warn{color:#B4432F}
+
 /* birthday curtain: dawn instead of dusk */
 .curtain.birthday{background:
   radial-gradient(80% 55% at 50% -10%,rgba(240,214,140,.34),transparent 70%),
@@ -273,6 +307,7 @@ mark{background:var(--wash);color:var(--ink);border-bottom:2px solid var(--accen
       <button role="tab" data-tab="core" aria-selected="false">Core memories</button>
       <button role="tab" data-tab="capsules" aria-selected="false" id="tabCaps">Capsules</button>
       <button role="tab" data-tab="words" aria-selected="false">Words</button>
+      <button role="tab" data-tab="friends" aria-selected="false" id="tabFriends">Friends</button>
       <button role="tab" data-tab="settings" aria-selected="false">Settings</button>
     </nav>
   </header>
@@ -298,6 +333,7 @@ mark{background:var(--wash);color:var(--ink);border-bottom:2px solid var(--accen
       <div class="stat"><span class="label">Streak</span><b id="sStreak">0</b></div>
       <div class="stat"><span class="label">Core memories</span><b id="sCore">0</b></div>
     </div>
+    <button class="friendsline" id="friendsLine" hidden></button>
     <div class="entry" id="todayEntry"></div>
     <div class="paper otd">
       <div class="row"><span class="label grow">On this day</span><button class="ghost" id="randomBtn">Random day</button></div>
@@ -356,6 +392,10 @@ mark{background:var(--wash);color:var(--ink);border-bottom:2px solid var(--accen
     <p class="hint" style="margin:0">Sized by how many days you mentioned each word. Little words like “I” and “the” are left out, and forms like slept, sleep and sleeping count as one. Classes like PSYCH 30 count as one word. Click any word to see the days it came from.</p>
   </section>
 
+  <section id="v-friends" class="view" hidden>
+    <div id="friendsBody" class="view"></div>
+  </section>
+
   <section id="v-settings" class="view" hidden>
     <div class="paper settings">
       <div class="label">Settings</div>
@@ -402,7 +442,7 @@ mark{background:var(--wash);color:var(--ink);border-bottom:2px solid var(--accen
     </div>
     <div class="paper settings">
       <div class="label">Your data</div>
-      <p class="hint" style="margin:0">Everything lives in one file on this Mac, with a daily backup beside it.</p>
+      <p class="hint" style="margin:0">Everything lives in one file on this Mac, with a daily backup beside it. Photos of paper journals are in the photos folder next to it.</p>
       <div class="row">
         <button class="ghost" id="reveal">Show data file in Finder</button>
         <button class="ghost" id="exportMd">Export as Markdown</button>
@@ -488,9 +528,12 @@ async function load(){
 const ui={get(k,f){try{return localStorage.getItem("dbd:"+k)??f}catch(e){return f}},set(k,v){try{localStorage.setItem("dbd:"+k,v)}catch(e){}},del(k){try{localStorage.removeItem("dbd:"+k)}catch(e){}}};
 
 /* derived */
-const hasEntry=k=>!!(days[k]&&days[k].text&&days[k].text.trim());
+const hasText=k=>!!(days[k]&&days[k].text&&days[k].text.trim());
+const hasPhoto=k=>!!(days[k]&&days[k].photo);
+const hasEntry=k=>hasText(k)||hasPhoto(k); // a photo of a paper journal counts as writing
 const isCore=k=>hasEntry(k)&&!!days[k].core;
-function streak(){let t=kdn(todayKey());if(!hasEntry(fromDn(t)))t--;let s=0;while(hasEntry(fromDn(t))){s++;t--}return s}
+function streakAt(k){let t=kdn(k),s=0;while(hasEntry(fromDn(t))){s++;t--}return s}
+function streak(){const t=kdn(todayKey());return streakAt(fromDn(hasEntry(todayKey())?t:t-1))}
 function lastAcked(){const tk=todayKey();const ks=Object.keys(days).filter(k=>days[k].acked&&k<tk).sort();return ks.length?ks[ks.length-1]:null}
 const validText=t=>t.trim().split(/\s+/).filter(Boolean).length>=2;
 
@@ -600,9 +643,11 @@ document.addEventListener("keydown",e=>{
 
 /* ---------- tabs ---------- */
 function setTab(t){
+  if(!$("v-"+t))t="today";
   for(const b of document.querySelectorAll("nav button"))b.setAttribute("aria-selected",String(b.dataset.tab===t));
-  for(const v of ["today","calendar","core","capsules","words","settings"])$("v-"+v).hidden=v!==t;
+  for(const v of ["today","calendar","core","capsules","words","friends","settings"])$("v-"+v).hidden=v!==t;
   if(t==="calendar")renderCal();if(t==="capsules")renderCapsules();if(t==="words")renderWords();if(t==="core")renderCore();if(t==="settings")renderSettings();
+  if(t==="friends"){renderFriends();loadFriends(true)}
   ui.set("tab",t);
 }
 document.querySelectorAll("nav button").forEach(b=>b.onclick=()=>setTab(b.dataset.tab));
@@ -628,6 +673,7 @@ function renderToday(){
   $("sCore").textContent=Object.keys(days).filter(isCore).length;
   const host=$("todayEntry");
   if(host.dataset.built!==k)buildEditor(host,k,true);
+  renderFriendsLine();
   renderOTD();
   renderCapBadge();
   syncTray();
@@ -655,8 +701,9 @@ function renderOTD(){
   const past=Object.keys(days).filter(x=>{const[py,pm,pd]=parseKey(x);return py<y&&pm===m&&pd===d&&hasEntry(x)}).sort().reverse();
   $("otdList").innerHTML=past.length?past.map(x=>{const yrs=y-parseKey(x)[0];const e=days[x];return `<div class="otd-item">
       <span class="when">${yrs} year${yrs===1?"":"s"} ago · ${fmtDate(x)} · day ${countFor(x)}${e.core?" · ★ core memory":""}</span>
-      <p><em>Today I</em> ${esc(e.text)}</p>${chipsStatic(tagsOf(x))}</div>`}).join("")
+      ${hasText(x)?`<p><em>Today I</em> ${esc(e.text)}</p>`:""}${photoTag(e.photo)}${chipsStatic(tagsOf(x))}</div>`}).join("")
     :`<p class="hint" style="margin:0">Nothing from ${MONTHS[m-1]} ${d} in earlier years yet. Next year, today's entry shows up here.</p>`;
+  hydratePhotos($("otdList"));
   const any=Object.keys(days).some(x=>x!==k&&hasEntry(x));
   $("randomBtn").disabled=$("randomBtn2").disabled=!any;
   $("randomBtn").title=$("randomBtn2").title=any?"Open a random past entry":"Write a few entries first";
@@ -671,38 +718,127 @@ function randomDay(){
 }
 $("randomBtn").onclick=randomDay;$("randomBtn2").onclick=randomDay;
 
+/* ---------- photos of paper journals ---------- */
+const CAMERA='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 8h3l2-3h6l2 3h3a1 1 0 0 1 1 1v10a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V9a1 1 0 0 1 1-1z"/><circle cx="12" cy="13.5" r="3.5"/></svg>';
+const canPhoto=()=>!!(api&&api.photo);
+const photoCache=new Map();
+async function photoURL(name){
+  if(!name||!canPhoto())return null;
+  if(photoCache.has(name))return photoCache.get(name);
+  const u=await api.photo.read(name).catch(()=>null);
+  if(u){photoCache.set(name,u);if(photoCache.size>40)photoCache.delete(photoCache.keys().next().value)}
+  return u;
+}
+const photoTag=name=>name&&canPhoto()?`<img class="thumb" data-photo="${esc(name)}" alt="Photo of the journal page" title="Click to see it larger. Double-click to open it in Preview.">`:"";
+function hydratePhotos(root){
+  root.querySelectorAll("img[data-photo]:not([src])").forEach(async img=>{const u=await photoURL(img.dataset.photo);if(u)img.src=u;else img.remove()});
+}
+document.addEventListener("click",e=>{const img=e.target.closest("img.thumb");if(img)img.classList.toggle("big")});
+document.addEventListener("dblclick",e=>{const img=e.target.closest("img[data-photo]");if(img&&canPhoto())api.photo.open(img.dataset.photo)});
+// Redraw at most 2000px on the long side. Drawing it upright onto a canvas also drops the camera's
+// metadata, so the JPEG that's kept (and maybe shared) has no location in it.
+async function cleanPhoto(dataUrl){
+  const img=new Image();img.src=dataUrl;await img.decode();
+  const s=Math.min(1,2000/Math.max(img.naturalWidth,img.naturalHeight));
+  const c=document.createElement("canvas");c.width=Math.round(img.naturalWidth*s);c.height=Math.round(img.naturalHeight*s);
+  c.getContext("2d").drawImage(img,0,0,c.width,c.height);
+  const blob=await new Promise(r=>c.toBlob(r,"image/jpeg",.85));
+  const url=await new Promise(r=>{const fr=new FileReader();fr.onload=()=>r(fr.result);fr.readAsDataURL(blob)});
+  return {bytes:new Uint8Array(await blob.arrayBuffer()),url};
+}
+
 /* ---------- entry editor ---------- */
 const STAR='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round" aria-hidden="true"><path d="M12 3l2.7 5.6 6.1.9-4.4 4.3 1 6.1L12 17l-5.4 2.9 1-6.1-4.4-4.3 6.1-.9z"/></svg>';
+const firstSentence=t=>(t.trim().split(/(?<=[.!?])\s/)[0]||"").slice(0,280);
 function buildEditor(host,k,isToday){
   host.dataset.built=k;
   const d=days[k]||{};const id=isToday?"t":"c";
   const draft=isToday?ui.get("draft:"+k,null):null;
   const chosen=new Set(d.tags||[]);
   const tagList=sortTags([...(settings.tags||[]),...chosen]);
+  const sh=d.share||{}, withPhoto=canPhoto(), withShare=!!(api&&api.share&&shareState.joined);
+  let photo=d.photo||null; // what this entry will be saved with
   host.innerHTML=`
     <div class="entryhead"><span class="label">${isToday?"Today":esc(fmtDate(k))} · day ${countFor(k)}</span><span class="hint" id="${id}-req"></span></div>
-    <div class="paper"><div class="prefix">Today I…</div><textarea id="${id}-text" aria-label="Today I"></textarea></div>
+    <div class="paper" id="${id}-paper"><div class="prefix">Today I…</div><textarea id="${id}-text" aria-label="Today I"></textarea>${withPhoto?`<div class="photoslot" id="${id}-photo"></div>`:""}</div>
     <div class="chips" id="${id}-tags">${tagList.map(t=>`<button class="chip" data-tag="${esc(t)}" aria-pressed="${chosen.has(t)}">${esc(t)}</button>`).join("")}</div>
     <div class="row">
       <button class="core-toggle" id="${id}-core" aria-pressed="${!!d.core}">${STAR}<span>Core memory</span></button>
       <div class="grow" id="${id}-titlewrap" ${d.core?"":"hidden"}><input type="text" id="${id}-title" placeholder="Give it a name" maxlength="80"></div>
     </div>
+    ${withShare?`<div class="sharebox">
+      <div class="row"><span class="label grow">Friends</span><span class="hint">They see that you wrote${isToday?" today":" this day"}.</span></div>
+      <label class="check"><input type="checkbox" id="${id}-shLine"${sh.line?" checked":""}> Share a line from this entry</label>
+      <input type="text" id="${id}-snip" maxlength="280" placeholder="The line your friends see, after “Today I…”" aria-label="Line to share"${sh.line?"":" hidden"}>
+      <label class="check" id="${id}-shPhotoWrap" hidden><input type="checkbox" id="${id}-shPhoto"${sh.photo?" checked":""}> Share the photo</label>
+    </div>`:""}
     <div class="row"><button class="save" id="${id}-save">Save entry</button><span class="saved" id="${id}-saved"></span><span class="hint">⌘↩ to save</span></div>`;
   const ta=$(id+"-text"),ct=$(id+"-core"),tt=$(id+"-title"),sv=$(id+"-save");
   ta.placeholder=isToday?"…write at least one sentence about the main thing that happened.":"…what happened this day?";
   ta.value=draft??(d.text||"");tt.value=d.coreTitle||"";
-  const check=()=>{const ok=validText(ta.value);sv.disabled=!ok;$(id+"-req").textContent=ok?(hasEntry(k)?"Saved entry · edit freely":"Ready to save"):"At least one sentence"};
+  const dirty=()=>{$(id+"-saved").textContent=hasEntry(k)?"Unsaved changes":""};
+  const check=()=>{const ok=!!photo||validText(ta.value);sv.disabled=!ok;$(id+"-req").textContent=ok?(hasEntry(k)?"Saved entry · edit freely":"Ready to save"):withPhoto?"At least one sentence, or a photo":"At least one sentence"};
   ta.oninput=()=>{check();$(id+"-saved").textContent="";if(isToday)ui.set("draft:"+k,ta.value)};
   ta.onkeydown=e=>{if(e.key==="Enter"&&(e.metaKey||e.ctrlKey)){e.preventDefault();sv.click()}};
-  $(id+"-tags").querySelectorAll(".chip").forEach(b=>b.onclick=()=>{b.setAttribute("aria-pressed",String(b.getAttribute("aria-pressed")!=="true"));$(id+"-saved").textContent=hasEntry(k)?"Unsaved changes":""});
+  $(id+"-tags").querySelectorAll(".chip").forEach(b=>b.onclick=()=>{b.setAttribute("aria-pressed",String(b.getAttribute("aria-pressed")!=="true"));dirty()});
   ct.onclick=()=>{const on=ct.getAttribute("aria-pressed")!=="true";ct.setAttribute("aria-pressed",String(on));$(id+"-titlewrap").hidden=!on;if(on)tt.focus()};
+
+  // a photo of a paper journal page, instead of or as well as the sentence
+  const slot=$(id+"-photo");
+  const photoMsg=t=>{const m=slot.querySelector(".pm");if(m)m.textContent=t};
+  function renderSlot(){
+    slot.innerHTML=photo
+      ?`<img data-photo="${esc(photo)}" alt="Photo of your journal page" title="Double-click to open it in Preview"><div class="row"><button class="linkbtn" data-act="add">Replace photo</button><button class="linkbtn" data-act="remove">Remove photo</button><span class="hint pm"></span></div>`
+      :`<div class="row"><button class="addphoto" data-act="add">${CAMERA}<span>Add a photo of your paper journal</span></button><span class="hint pm">or drop one here</span></div>`;
+    hydratePhotos(slot);
+    slot.querySelector('[data-act="add"]').onclick=()=>addPhoto(()=>api.photo.pick());
+    const rm=slot.querySelector('[data-act="remove"]');
+    if(rm)rm.onclick=()=>{photo=null;renderSlot();dirty();check()};
+    syncShare();
+  }
+  async function addPhoto(get){
+    photoMsg("Adding the photo…");
+    let r=null;
+    try{r=await get()}catch(e){r={error:"That file couldn't be opened as a picture."}}
+    if(!r){photoMsg(photo?"":"or drop one here");return}
+    if(r.error){photoMsg(r.error);return}
+    try{
+      const c=await cleanPhoto(r.dataUrl);
+      const s=await api.photo.save(k,c.bytes);
+      if(!s||s.error){photoMsg((s&&s.error)||"That picture couldn't be saved.");return}
+      photoCache.set(s.name,c.url);photo=s.name;renderSlot();dirty();check();
+    }catch(e){photoMsg("That picture couldn't be opened.")}
+  }
+  if(slot){
+    const paper=$(id+"-paper");
+    paper.ondragover=e=>{if([...e.dataTransfer.types].includes("Files")){e.preventDefault();paper.classList.add("over")}};
+    paper.ondragleave=e=>{if(!paper.contains(e.relatedTarget))paper.classList.remove("over")};
+    paper.ondrop=e=>{e.preventDefault();paper.classList.remove("over");const f=e.dataTransfer.files[0];if(f)addPhoto(()=>api.photo.importFile(f))};
+  }
+
+  // what friends see from this entry (nothing beyond "wrote" unless turned on here)
+  function syncShare(){
+    if(!withShare)return;
+    $(id+"-shPhotoWrap").hidden=!photo;
+    $(id+"-snip").hidden=!$(id+"-shLine").checked;
+  }
+  if(withShare){
+    $(id+"-snip").value=sh.line||"";
+    $(id+"-shLine").onchange=()=>{const on=$(id+"-shLine").checked;if(on&&!$(id+"-snip").value.trim())$(id+"-snip").value=firstSentence(ta.value);syncShare();if(on)$(id+"-snip").focus();dirty()};
+    $(id+"-snip").oninput=dirty;$(id+"-shPhoto").onchange=dirty;
+  }
+  if(slot)renderSlot();else syncShare();
+
   sv.onclick=()=>{
-    if(!validText(ta.value))return;
+    if(!photo&&!validText(ta.value))return;
     const core=ct.getAttribute("aria-pressed")==="true";
     const tags=sortTags([...$(id+"-tags").querySelectorAll('.chip[aria-pressed="true"]')].map(b=>b.dataset.tag));
-    days[k]={...(days[k]||{}),text:ta.value.trim(),tags,core,coreTitle:core?tt.value.trim():"",n:countFor(k),updatedAt:Date.now()};
+    const share=withShare?{line:$(id+"-shLine").checked?$(id+"-snip").value.trim().slice(0,280):"",photo:!!photo&&$(id+"-shPhoto").checked}:days[k]?.share;
+    days[k]={...(days[k]||{}),text:ta.value.trim(),tags,core,coreTitle:core?tt.value.trim():"",photo,n:countFor(k),updatedAt:Date.now(),...(share?{share}:{})};
     if(isToday)ui.del("draft:"+k);
     persist();
+    pushShare(k);
+    if(k!==todayKey()&&hasEntry(todayKey()))pushShare(todayKey()); // filling in a missed day can lengthen today's streak
     if(isToday){renderToday();$(id+"-saved").textContent=core?"Saved as a core memory":"Saved";check()}
     else{if(k===todayKey())$("todayEntry").dataset.built="";renderToday();renderCal()}
   };
@@ -749,9 +885,12 @@ function renderDetail(){
   host.innerHTML=`<div class="paper" style="display:grid;gap:10px">
     <div class="row"><h3 class="grow">${fmtDate(selKey)}</h3><span class="label">day ${countFor(selKey)}</span></div>
     ${d.core?`<div class="coreline">${STAR}<span>${esc(d.coreTitle||"Core memory")}</span></div>`:""}
-    <div class="read"><em>Today I</em> ${esc(d.text)}</div>
+    ${hasText(selKey)?`<div class="read"><em>Today I</em> ${esc(d.text)}</div>`:""}
+    ${photoTag(d.photo)}
     ${chipsStatic(tagsOf(selKey))}
+    ${sharedNote(d)}
     <div><button class="ghost" id="editDay">Edit</button></div></div>`;
+  hydratePhotos(host);
   $("editDay").onclick=editor;
 }
 $("prevM").onclick=()=>{let[y,m]=viewMonth;m--;if(m<1){m=12;y--}viewMonth=[y,m];renderCal()};
@@ -776,11 +915,12 @@ function renderCore(){
         <span class="label">${list.length} ${list.length===1?"memory":"memories"}</span>
       </div>
       <div class="paper">${list.map(k=>{const d=days[k];return `<div class="mem">
-        <span class="day">day ${countFor(k)}</span><h3>${esc(d.coreTitle||summary(d.text))}</h3>
-        <span class="date">${fmtDate(k)}</span><p>Today I ${esc(d.text)}</p>
+        <span class="day">day ${countFor(k)}</span><h3>${esc(d.coreTitle||(hasText(k)?summary(d.text):"A page from the journal"))}</h3>
+        <span class="date">${fmtDate(k)}</span>${hasText(k)?`<p>Today I ${esc(d.text)}</p>`:""}${photoTag(d.photo)}
         ${tagsOf(k).length?`<div style="grid-column:2">${chipsStatic(tagsOf(k))}</div>`:""}
         <button data-k="${k}">Open in calendar</button></div>`}).join("")}</div>
     </div>`).join("");
+  hydratePhotos($("coreList"));
   $("coreList").querySelectorAll("button[data-k]").forEach(b=>b.onclick=()=>{selKey=b.dataset.k;const[y,m]=parseKey(selKey);viewMonth=[y,m];setTab("calendar")});
 }
 
@@ -815,7 +955,10 @@ function updateCapForm(){
   $("capSeal").disabled=!(okText&&okDate);
   $("capHint").textContent=!okDate?(capChoice==="pick"?"Pick a day after today.":""):`Opens ${longDate(when)}, ${parseKey(when)[0]}, in ${kdn(when)-kdn(todayKey())} days. You can't read it until then.`;
 }
-$("capText").oninput=updateCapForm;$("capDate").oninput=updateCapForm;
+// keep an unsealed capsule as a draft, so quitting doesn't lose it
+const saveCapDraft=()=>{const t=$("capTitle").value,x=$("capText").value;if(t.trim()||x.trim())ui.set("capdraft",JSON.stringify({t,x}));else ui.del("capdraft")};
+try{const dr=JSON.parse(ui.get("capdraft","null"));if(dr){$("capTitle").value=dr.t||"";$("capText").value=dr.x||""}}catch(e){}
+$("capText").oninput=()=>{saveCapDraft();updateCapForm()};$("capTitle").oninput=saveCapDraft;$("capDate").oninput=updateCapForm;
 $("capSeal").onclick=()=>{
   const when=capOpenDate(),text=$("capText").value.trim();
   if(!text||!when||when<=todayKey())return;
@@ -901,7 +1044,7 @@ function pairAt(text,toks,x){
 function classCandidates(){
   const seen={};
   for(const k of Object.keys(days)){
-    if(!hasEntry(k))continue;
+    if(!hasText(k))continue;
     const text=entryText(k),toks=rawTokens(text);
     for(let x=0;x<toks.length;x++){
       const p=pairAt(text,toks,x);if(!p)continue;
@@ -942,7 +1085,7 @@ const adjacent=(text,a,b)=>/^[ -]+$/.test(text.slice(a.j,b.i));
 
 function analyze(){
   const classes=new Set(classList()),hidden=new Set(settings.hiddenWords||[]),aliases=settings.aliases||{};
-  const entries=Object.keys(days).filter(hasEntry).sort();
+  const entries=Object.keys(days).filter(hasText).sort(); // photo-only days have no words to count
   const raw={},V=new Set();
   for(const k of entries){
     const text=entryText(k),toks=rawTokens(text),list=[];
@@ -1133,6 +1276,197 @@ function addClass(){
 $("wsAddClass").onclick=addClass;
 $("wsNewClass").onkeydown=e=>{if(e.key==="Enter"){e.preventDefault();addClass()}};
 
+/* ---------- friends ---------- */
+// See whether friends have written today, and the line or photo they chose to share.
+// The network side is in share.js (main process); everything here goes through api.share.
+let shareState={configured:false,joined:false,lost:false,name:"",code:"",unsent:0};
+let friendsData=null,friendsAt=0,friendsErr="",friendsBusy=false;
+const friendPhotoCache=new Map();
+const canShareApi=()=>!!(api&&api.share);
+async function refreshShareStatus(){
+  if(!canShareApi())return;
+  const r=await api.share.status().catch(()=>null);
+  if(r&&r.ok)shareState=r.data;
+}
+function rebuildEditors(){$("todayEntry").dataset.built="";renderToday();if(!$("v-calendar").hidden)renderCal()}
+async function loadFriends(force){
+  if(!canShareApi()||!shareState.joined||friendsBusy)return;
+  if(!force&&friendsData&&Date.now()-friendsAt<60000)return;
+  friendsBusy=true;
+  const r=await api.share.friends().catch(()=>null);
+  friendsBusy=false;
+  if(r&&r.ok){friendsData=r.data;friendsAt=Date.now();friendsErr=""}
+  else friendsErr=r?r.error:"Couldn't reach Friends.";
+  const was=shareState.joined;
+  await refreshShareStatus();
+  if(was&&!shareState.joined){friendsData=null;rebuildEditors()} // signed out on the server
+  renderFriendsLine();renderFriendsBadge();
+  if(!$("v-friends").hidden)renderFriends();
+}
+function pushShare(k){
+  if(!canShareApi()||!shareState.joined||!hasEntry(k))return;
+  const d=days[k],s=d.share||{};
+  api.share.push({day:k,count:countFor(k),streak:streakAt(k),snippet:s.line||null,photo:s.photo&&d.photo?d.photo:null})
+    .then(r=>{if(r&&r.ok&&r.data)shareState.unsent=r.data.unsent||0}).catch(()=>{});
+}
+function sharedNote(d){
+  if(!shareState.joined||!d.share)return "";
+  const what=[d.share.line?"a line":"",d.share.photo&&d.photo?"the photo":""].filter(Boolean);
+  return what.length?`<span class="hint">Shared with friends: ${what.join(" and ")}.</span>`:"";
+}
+const yesterdayKey=()=>fromDn(kdn(todayKey())-1);
+const friendDone=f=>!!f.posts[0]&&f.posts[0].day>=todayKey(); // their date, which can run ahead of yours
+function relDay(k){
+  if(k>=todayKey())return "today";
+  if(k===yesterdayKey())return "yesterday";
+  const[y,m,d]=parseKey(k);return y===parseKey(todayKey())[0]?`${MON[m-1]} ${d}`:fmtDate(k);
+}
+const friendsOnly=()=>(shareState.joined&&friendsData||[]).filter(f=>f.state==="friends");
+
+function renderFriendsLine(){
+  const el=$("friendsLine"),fr=friendsOnly();
+  if(!fr.length){el.hidden=true;return}
+  const done=fr.filter(friendDone).length;
+  el.hidden=false;
+  el.innerHTML=`<span class="label">Friends</span><span class="grow">${done} of ${fr.length} wrote today</span>`
+    +fr.slice().sort((a,b)=>friendDone(b)-friendDone(a)).slice(0,6).map(f=>`<span class="who${friendDone(f)?" done":""}"><i class="fdot"></i>${esc(f.name)}</span>`).join("")
+    +(fr.length>6?`<span class="hint">+${fr.length-6}</span>`:"");
+}
+$("friendsLine").onclick=()=>setTab("friends");
+function renderFriendsBadge(){
+  const n=shareState.joined?(friendsData||[]).filter(f=>f.state==="received").length:0;
+  $("tabFriends").innerHTML="Friends"+(n?`<span class="tabdot accent" aria-label="${plural(n,"friend request")}"></span>`:"");
+}
+
+function renderFriends(){
+  const host=$("friendsBody");
+  const mode=!canShareApi()?"browser":!shareState.configured?"unconfigured":!shareState.joined?"join":"joined";
+  if(host.dataset.mode!==mode){host.dataset.mode=mode;buildFriendsShell(host,mode)} // keeps what you're typing across refreshes
+  if(mode==="joined")renderFriendLists();
+}
+function buildFriendsShell(host,mode){
+  if(mode==="browser"){host.innerHTML=`<div class="paper empty"><b>Friends works in the app</b>Open Day by Day to journal alongside your friends.</div>`;return}
+  if(mode==="unconfigured"){host.innerHTML=`<div class="paper empty"><b>Friends isn't set up yet</b>This copy of Day by Day isn't connected to a Friends server. Whoever builds the app fills in source/share-config.json, and the README explains how.</div>`;return}
+  if(mode==="join"){
+    host.innerHTML=`<div class="paper settings">
+      <div class="label">Friends</div>
+      <h2 class="fhead">See when your friends have written</h2>
+      <p class="hint" style="margin:0">Friends see whether you've written each day, with your day number and streak. Your entries stay on this Mac. When you want to, you can share one line or the photo from an entry.</p>
+      ${shareState.lost?`<p class="hint warn" style="margin:0">This Mac was signed out of Friends, so it needs a new code. Your friends will need to add you again.</p>`:""}
+      <label>Your name, as friends see it<input type="text" id="fName" maxlength="40" placeholder="e.g. Sam" autocomplete="off"></label>
+      <div class="row"><button class="save" id="fJoin" disabled>Turn on Friends</button><span class="hint" id="fMsg"></span></div>
+    </div>`;
+    const nm=$("fName"),btn=$("fJoin");
+    nm.value=shareState.name||"";btn.disabled=!nm.value.trim();
+    nm.oninput=()=>{btn.disabled=!nm.value.trim()};
+    nm.onkeydown=e=>{if(e.key==="Enter"&&!btn.disabled){e.preventDefault();btn.click()}};
+    btn.onclick=async()=>{
+      btn.disabled=true;$("fMsg").textContent="Turning on Friends…";
+      const r=await api.share.join(nm.value.trim()).catch(()=>null);
+      if(!r||!r.ok){$("fMsg").textContent=r?r.error:"Something went wrong.";btn.disabled=false;return}
+      shareState=r.data;friendsData=[];friendsAt=Date.now();
+      rebuildEditors();pushShare(todayKey());renderFriends();loadFriends(true);
+    };
+    return;
+  }
+  host.innerHTML=`
+    <div class="paper settings">
+      <div class="row"><div class="grow"><div class="label">Your friend code</div><div class="fcode" id="fCode"></div></div><button class="ghost" id="fCopy">Copy</button></div>
+      <p class="hint" style="margin:0">Send it to a friend. When they add it and you accept, or you add theirs, you'll see each other.</p>
+      <div class="row"><input type="text" id="fAddCode" class="grow" style="width:auto;font-family:var(--mono);letter-spacing:.08em" placeholder="Friend's code" maxlength="9" autocomplete="off" spellcheck="false" aria-label="Friend's code"><button class="ghost" id="fAdd">Add friend</button></div>
+      <span class="hint" id="fAddMsg"></span>
+    </div>
+    <div class="flist" id="fRequests"></div>
+    <div class="flist" id="fToday"></div>
+    <div class="flist" id="fSent"></div>
+    <div class="paper settings">
+      <div class="label">You</div>
+      <label>Your name, as friends see it<input type="text" id="fRename" maxlength="40" autocomplete="off"></label>
+      <div class="row"><button class="ghost" id="fRenameBtn">Save name</button><span class="saved" id="fRenameMsg"></span></div>
+      <div class="row"><span class="hint grow" id="fUpdated"></span><button class="ghost" id="fRefresh">Refresh</button></div>
+      <div id="fLeaveBox"><button class="linkbtn danger" id="fLeave">Leave Friends</button></div>
+    </div>`;
+  $("fCode").textContent=shareState.code;
+  $("fCopy").onclick=e=>copy(shareState.code,e.currentTarget,$("fCode"));
+  const addBtn=$("fAdd"),addIn=$("fAddCode");
+  const add=async()=>{
+    if(!addIn.value.trim())return;
+    addBtn.disabled=true;$("fAddMsg").textContent="Adding…";
+    const r=await api.share.add(addIn.value.trim()).catch(()=>null);
+    addBtn.disabled=false;
+    if(!r||!r.ok){$("fAddMsg").textContent=r?r.error:"Something went wrong.";return}
+    addIn.value="";
+    $("fAddMsg").textContent=r.data.state==="friends"?`You and ${r.data.name} are friends now.`:`Sent. When ${r.data.name} accepts, you'll see each other.`;
+    loadFriends(true);
+  };
+  addBtn.onclick=add;
+  addIn.onkeydown=e=>{if(e.key==="Enter"){e.preventDefault();add()}};
+  $("fRename").value=shareState.name;
+  $("fRenameBtn").onclick=async()=>{
+    const v=$("fRename").value.trim();if(!v)return;
+    const r=await api.share.join(v).catch(()=>null);
+    if(r&&r.ok)shareState=r.data;
+    $("fRenameMsg").textContent=r&&r.ok?"Saved":(r?r.error:"Something went wrong.");
+  };
+  $("fRefresh").onclick=()=>loadFriends(true);
+  $("fLeave").onclick=()=>{
+    const box=$("fLeaveBox");
+    box.innerHTML=`<p class="hint" style="margin:0 0 6px">This deletes your friend code, your friends list and everything you've shared. Your entries on this Mac stay.</p><button class="linkbtn danger" id="fLeaveYes">Leave Friends</button> <button class="linkbtn" id="fLeaveNo">Keep</button>`;
+    $("fLeaveNo").onclick=()=>{host.dataset.mode="";renderFriends()};
+    $("fLeaveYes").onclick=async()=>{
+      box.innerHTML=`<span class="hint">Deleting what you shared…</span>`;
+      const r=await api.share.leave().catch(()=>null);
+      if(!r||!r.ok){box.innerHTML=`<span class="hint warn">${esc(r?r.error:"Something went wrong.")}</span> <button class="linkbtn" id="fLeaveOk">OK</button>`;$("fLeaveOk").onclick=()=>{host.dataset.mode="";renderFriends()};return}
+      shareState=r.data;friendsData=null;friendsAt=0;
+      rebuildEditors();renderFriendsBadge();renderFriends();
+    };
+  };
+}
+function friendCard(f){
+  const p=f.posts[0],done=friendDone(f);
+  const recent=p&&(done||p.day===yesterdayKey());
+  const meta=[p&&p.count!=null?`day ${p.count}`:"",recent&&p.streak>1?`${p.streak}-day streak`:""].filter(Boolean).join(" · ");
+  return `<div class="paper friend">
+    <div class="ftop"><h3 class="grow">${esc(f.name)}</h3><span class="pill${done?" done":""}">${done?"Wrote today":p?`Last wrote ${relDay(p.day)}`:"Hasn't written yet"}</span></div>
+    ${meta?`<div class="hint">${meta}</div>`:""}
+    ${p&&p.snippet?`<p class="say"><em>Today I</em> ${esc(p.snippet)}</p>`:""}
+    ${p&&p.photo?`<img class="thumb" data-fphoto="${esc(p.photo)}" data-v="${esc(p.updatedAt)}" alt="${esc(f.name)}'s journal page">`:""}
+    <div><button class="linkbtn" data-unfriend="${esc(f.id)}">Remove</button></div>
+  </div>`;
+}
+function renderFriendLists(){
+  const host=$("friendsBody"),all=friendsData||[];
+  const received=all.filter(f=>f.state==="received"),fr=all.filter(f=>f.state==="friends"),sent=all.filter(f=>f.state==="sent");
+  $("fRequests").innerHTML=received.map(f=>`<div class="paper friend"><div class="ftop"><h3 class="grow">${esc(f.name)}</h3><span class="pill">Wants to be friends</span></div>
+    <div class="row"><button class="save" data-accept="${esc(f.id)}">Accept</button><button class="ghost" data-decline="${esc(f.id)}">Decline</button></div></div>`).join("");
+  const done=fr.filter(friendDone).length;
+  const sum=fr.length===1?(done?"Your friend has written today.":"Your friend hasn't written yet today.")
+    :done===fr.length?"Everyone has written today.":`${done} of ${fr.length} friends have written today.`;
+  $("fToday").innerHTML=friendsData==null?`<p class="hint">${friendsErr?esc(friendsErr):"Loading your friends…"}</p>`
+    :fr.length?`<p class="fsum">${sum}</p>`+fr.slice().sort((a,b)=>friendDone(b)-friendDone(a)||a.name.localeCompare(b.name)).map(friendCard).join("")
+    :`<div class="paper empty"><b>No friends yet</b>Send someone your code, or add theirs above.</div>`;
+  $("fSent").innerHTML=sent.map(f=>`<div class="row"><span class="hint grow">Waiting for ${esc(f.name)} to accept.</span><button class="linkbtn" data-cancel="${esc(f.id)}">Cancel</button></div>`).join("");
+  const up=$("fUpdated");
+  up.classList.toggle("warn",!!friendsErr);
+  up.textContent=friendsErr||(friendsAt?`Updated ${new Date(friendsAt).toLocaleTimeString([],{hour:"numeric",minute:"2-digit"})}`:"")
+    +(shareState.unsent?` · ${plural(shareState.unsent,"day")} waiting to send`:"");
+  const act=async(btn,fn)=>{btn.disabled=true;const r=await fn().catch(()=>null);await loadFriends(true);if(!r||!r.ok){friendsErr=r?r.error:"Something went wrong.";renderFriendLists()}};
+  host.querySelectorAll("[data-accept]").forEach(b=>b.onclick=()=>act(b,()=>api.share.accept(b.dataset.accept)));
+  host.querySelectorAll("[data-decline]").forEach(b=>b.onclick=()=>act(b,()=>api.share.remove(b.dataset.decline)));
+  host.querySelectorAll("[data-cancel]").forEach(b=>b.onclick=()=>act(b,()=>api.share.remove(b.dataset.cancel)));
+  host.querySelectorAll("[data-unfriend]").forEach(b=>b.onclick=()=>{
+    const box=b.parentElement,id=b.dataset.unfriend,f=all.find(x=>x.id===id);
+    box.innerHTML=`<span class="hint">Remove ${esc(f?f.name:"this friend")}? You'll stop seeing each other. </span><button class="linkbtn danger" data-yes>Remove</button> <button class="linkbtn" data-no>Keep</button>`;
+    box.querySelector("[data-yes]").onclick=e=>act(e.currentTarget,()=>api.share.remove(id));
+    box.querySelector("[data-no]").onclick=renderFriendLists;
+  });
+  host.querySelectorAll("img[data-fphoto]").forEach(async img=>{
+    const key=img.dataset.fphoto+"@"+img.dataset.v;
+    if(!friendPhotoCache.has(key)){const r=await api.share.photo(img.dataset.fphoto,img.dataset.v).catch(()=>null);if(!r||!r.ok){img.remove();return}friendPhotoCache.set(key,r.data)}
+    img.src=friendPhotoCache.get(key);
+  });
+}
+
 /* ---------- settings ---------- */
 $("setMonth").innerHTML=MONTHS.map((m,i)=>`<option value="${i+1}">${m}</option>`).join("");
 function renderTagManager(){
@@ -1198,7 +1532,8 @@ function toMarkdown(){
     if(by!==curBy){curBy=by;lines.push(`## ${yearName(by)} (${fmtDate(keyOf(by,settings.bMonth,settings.bDay))} → ${fmtDate(yearEnd(by))})`,``)}
     const d=days[k];
     lines.push(`### ${longDate(k)}, ${parseKey(k)[0]} · day ${countFor(k)}${d.core?` · ★ ${d.coreTitle||"Core memory"}`:""}`,``);
-    lines.push(`Today I ${d.text}`,``);
+    if(hasText(k))lines.push(`Today I ${d.text}`,``);
+    if(d.photo)lines.push(`Photo: photos/${d.photo}`,``);
     if(tagsOf(k).length)lines.push(`Tags: ${tagsOf(k).join(", ")}`,``);
   }
   const caps=Object.values(capsules).sort((a,b)=>a.openOn.localeCompare(b.openOn));
@@ -1225,10 +1560,13 @@ $("exportJson").onclick=()=>doExport("json");
 /* ---------- boot ---------- */
 (async()=>{
   await load();
+  await refreshShareStatus(); // before the editor is built, so it knows whether to offer sharing
   renderToday();
   setTab(ui.get("tab","today"));
   checkDay();
-  if(api) api.onCheckDay(checkDay);
+  loadFriends(true);
+  if(api) api.onCheckDay(()=>{checkDay();loadFriends(false)});
+  setInterval(()=>{if(!document.hidden)loadFriends(false)},3*60*1000);
   if(api&&api.onGoTab) api.onGoTab(t=>{if(!curtainUp){setTab(t);if(t==="today")$("t-text")?.focus()}});
   document.addEventListener("visibilitychange",()=>{if(!document.hidden)checkDay()});
   let last=todayKey();

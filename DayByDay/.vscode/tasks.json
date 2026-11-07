@@ -1,0 +1,31 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "Run Day by Day",
+      "detail": "Open the app from source/ with practice data. Quit it with ⌘Q.",
+      "type": "shell",
+      "command": "${workspaceFolder}/dev/run.sh",
+      "group": { "kind": "build", "isDefault": true },
+      "presentation": { "reveal": "silent", "panel": "dedicated", "clear": true },
+      "problemMatcher": []
+    },
+    {
+      "label": "Run Day by Day as a new user",
+      "detail": "Same, but starts from empty practice data",
+      "type": "shell",
+      "command": "${workspaceFolder}/dev/run.sh",
+      "args": ["--fresh"],
+      "presentation": { "reveal": "silent", "panel": "dedicated", "clear": true },
+      "problemMatcher": []
+    },
+    {
+      "label": "Get Electron",
+      "type": "shell",
+      "command": "${workspaceFolder}/dev/run.sh",
+      "args": ["--prepare"],
+      "presentation": { "reveal": "silent" },
+      "problemMatcher": []
+    }
+  ]
+}

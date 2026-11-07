@@ -3,8 +3,13 @@
 const { app, BrowserWindow, ipcMain, shell, powerMonitor, nativeTheme, Notification, dialog, Tray, Menu, nativeImage } = require("electron");
 const path = require("path");
 const fs = require("fs");
+const { execFile } = require("child_process");
+const { createSharing } = require("./share");
 
 app.setName("Day by Day");
+// Running from source (dev/run.sh, or F5 in VS Code): separate practice data, and no Login Items.
+const DEV = process.env.DAYBYDAY_DEV === "1";
+if (DEV) app.setPath("userData", path.join(app.getPath("appData"), "Day by Day (dev)"));
 const dataFile = () => path.join(app.getPath("userData"), "daybyday-data.json");
 const pad = (n) => String(n).padStart(2, "0");
 const keyOf = (d) => `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
@@ -19,14 +24,19 @@ function writeData(obj) {
   cache = obj || {};
   const file = dataFile();
   fs.mkdirSync(path.dirname(file), { recursive: true });
+  // Daily backup: before the first save of each day, keep the file as it was.
+  // Copying after every save made today's backup identical to the live file, so a bad save ruined both.
+  try {
+    const bdir = path.join(path.dirname(file), "backups");
+    const bfile = path.join(bdir, `daybyday-${keyOf(new Date())}.json`);
+    if (fs.existsSync(file) && !fs.existsSync(bfile)) {
+      fs.mkdirSync(bdir, { recursive: true });
+      fs.copyFileSync(file, bfile);
+    }
+  } catch (e) {}
   const tmp = file + ".tmp";
   fs.writeFileSync(tmp, JSON.stringify(cache, null, 2));
   fs.renameSync(tmp, file);
-  try {
-    const bdir = path.join(path.dirname(file), "backups");
-    fs.mkdirSync(bdir, { recursive: true });
-    fs.copyFileSync(file, path.join(bdir, `daybyday-${keyOf(new Date())}.json`));
-  } catch (e) {}
   applyLoginItem();
   if (tray) buildTray();
   return true;
@@ -169,6 +179,7 @@ app.on("before-quit", () => { quitting = true; });
 
 /* ---------- open at login ---------- */
 function applyLoginItem() {
+  if (DEV) return; // it would register the bare Electron binary
   const want = (cache.settings || {}).openAtLogin !== false;
   try {
     if (app.getLoginItemSettings().openAtLogin !== want) app.setLoginItemSettings({ openAtLogin: want });
@@ -189,7 +200,7 @@ function reminderDue(now = new Date()) {
   const k = keyOf(now);
   if (lastReminded === k) return false;
   const d = (cache.days || {})[k];
-  return !(d && d.text && d.text.trim());
+  return !(d && ((d.text && d.text.trim()) || d.photo)); // a photo of a paper journal counts
 }
 function sendReminder(test) {
   if (!Notification.isSupported()) return false;
@@ -205,6 +216,89 @@ function sendReminder(test) {
 function checkReminder() {
   if (reminderDue()) { lastReminded = keyOf(new Date()); sendReminder(false); }
 }
+
+/* ---------- photos of paper journals ---------- */
+// Photos live next to the data file, in photos/. Imports go through sips (built into macOS), which
+// reads iPhone HEIC as well as JPEG and PNG. The page then redraws the picture upright and without its
+// metadata (so no location), and the JPEG it hands back is the one that's kept and, if you choose, shared.
+const photoDir = () => path.join(app.getPath("userData"), "photos");
+const PHOTO_NAME = /^\d{4}-\d{2}-\d{2}-\d{13}\.jpg$/;
+const PHOTO_EXT = ["jpg", "jpeg", "png", "heic", "heif", "webp", "tif", "tiff", "gif", "bmp"];
+const photoFile = (name) => (PHOTO_NAME.test(String(name)) ? path.join(photoDir(), String(name)) : null);
+
+function importPhoto(src) {
+  return new Promise((resolve) => {
+    const bad = (msg) => resolve({ error: msg || "That file couldn't be opened as a picture." });
+    try {
+      if (typeof src !== "string" || !path.isAbsolute(src)) return bad();
+      if (!PHOTO_EXT.includes(path.extname(src).slice(1).toLowerCase())) return bad("Pick a picture: JPEG, PNG or HEIC.");
+      const st = fs.statSync(src);
+      if (!st.isFile() || st.size > 100 * 1024 * 1024) return bad("That picture is too big.");
+    } catch (e) { return bad(); }
+    const out = path.join(app.getPath("temp"), `daybyday-import-${process.pid}-${Date.now()}.jpg`);
+    // shrink big phone photos before they cross to the page, but don't enlarge small ones (-Z alone would)
+    execFile("/usr/bin/sips", ["-g", "pixelWidth", "-g", "pixelHeight", src], { timeout: 30000 }, (gerr, info) => {
+      const dims = String(info || "").match(/pixel(?:Width|Height):\s*(\d+)/g) || [];
+      const longest = Math.max(0, ...dims.map((s) => Number(s.split(":")[1])));
+      if (gerr || !longest) return bad();
+      const args = ["-s", "format", "jpeg", "-s", "formatOptions", "90", ...(longest > 2400 ? ["-Z", "2400"] : []), src, "--out", out];
+      execFile("/usr/bin/sips", args, { timeout: 60000 }, (err) => {
+        let buf = null;
+        try { buf = fs.readFileSync(out); } catch (e) {}
+        try { fs.unlinkSync(out); } catch (e) {}
+        if (err || !buf || buf.length < 100) return bad();
+        resolve({ dataUrl: "data:image/jpeg;base64," + buf.toString("base64") });
+      });
+    });
+  });
+}
+ipcMain.handle("photo:pick", async () => {
+  const r = await dialog.showOpenDialog(win, {
+    title: "Add a photo of your journal", buttonLabel: "Add photo", properties: ["openFile"],
+    filters: [{ name: "Pictures", extensions: PHOTO_EXT }]
+  });
+  if (r.canceled || !r.filePaths[0]) return null;
+  return importPhoto(r.filePaths[0]);
+});
+ipcMain.handle("photo:import", (_e, src) => importPhoto(src));
+ipcMain.handle("photo:save", (_e, day, bytes) => {
+  const buf = bytes instanceof ArrayBuffer ? Buffer.from(bytes)
+    : ArrayBuffer.isView(bytes) ? Buffer.from(bytes.buffer, bytes.byteOffset, bytes.byteLength) : null;
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(String(day)) || !buf || buf.length < 100 || buf.length > 15 * 1024 * 1024 || buf[0] !== 0xff || buf[1] !== 0xd8) {
+    return { error: "That picture couldn't be saved." };
+  }
+  fs.mkdirSync(photoDir(), { recursive: true });
+  const name = `${day}-${Date.now()}.jpg`;
+  fs.writeFileSync(path.join(photoDir(), name), buf);
+  return { name };
+});
+ipcMain.handle("photo:read", (_e, name) => {
+  const f = photoFile(name);
+  try { return f ? "data:image/jpeg;base64," + fs.readFileSync(f).toString("base64") : null; } catch (e) { return null; }
+});
+ipcMain.handle("photo:open", (_e, name) => { const f = photoFile(name); if (f && fs.existsSync(f)) shell.openPath(f); });
+
+/* ---------- friends (see share.js) ---------- */
+let sharing = null;
+const share = () => sharing || (sharing = createSharing({
+  dir: app.getPath("userData"),
+  configPath: path.join(__dirname, "share-config.json"),
+  photoPath: photoFile
+}));
+// errors come back as values, so the page can show their message as-is
+const shareCall = (fn) => async (_e, ...args) => {
+  try { return { ok: true, data: await fn(...args) }; }
+  catch (e) { return { ok: false, code: e.code || "error", error: e.message || String(e) }; }
+};
+ipcMain.handle("share:status", shareCall(() => share().status()));
+ipcMain.handle("share:join", shareCall((name) => share().join(name)));
+ipcMain.handle("share:friends", shareCall(() => share().friends()));
+ipcMain.handle("share:add", shareCall((code) => share().addFriend(code)));
+ipcMain.handle("share:accept", shareCall((id) => share().acceptFriend(id)));
+ipcMain.handle("share:remove", shareCall((id) => share().removeFriend(id)));
+ipcMain.handle("share:push", shareCall((p) => share().push(p)));
+ipcMain.handle("share:photo", shareCall((p, v) => share().friendPhoto(p, v)));
+ipcMain.handle("share:leave", shareCall(() => share().leave()));
 
 /* ---------- ipc ---------- */
 ipcMain.handle("data:load", () => cache);
@@ -231,19 +325,24 @@ ipcMain.handle("export:save", async (_e, { name, content, ext }) => {
 
 app.setAboutPanelOptions({
   applicationName: "Day by Day",
-  applicationVersion: "1.7.0",
+  applicationVersion: app.getVersion(), // from package.json, the one place the version lives
   credits: "Developed by Theo",
   copyright: `© ${new Date().getFullYear()} Theo`
 });
 
 app.whenReady().then(() => {
+  if (DEV && app.dock) app.dock.setIcon(path.join(__dirname, "icon.png")); // look like the real app, not Electron
   cache = readData();
   applyLoginItem();
   buildTray();
   createWindow();
   checkReminder();
   setInterval(() => { checkNewDay(); checkReminder(); }, 30 * 1000);
-  powerMonitor.on("resume", () => { win && win.webContents.send("check-day"); checkReminder(); });
+  // send anything written while offline
+  const flushShares = () => share().flush().catch(() => {});
+  setTimeout(flushShares, 5000);
+  setInterval(flushShares, 2 * 60 * 1000);
+  powerMonitor.on("resume", () => { win && win.webContents.send("check-day"); checkReminder(); flushShares(); });
   powerMonitor.on("unlock-screen", () => { win && win.webContents.send("check-day"); checkReminder(); });
   app.on("activate", () => showWindow());
 });

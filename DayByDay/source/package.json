@@ -1,7 +1,7 @@
 {
   "name": "day-by-day",
   "productName": "Day by Day",
-  "version": "1.0.0",
+  "version": "1.8.0",
   "description": "Count the days since Dec 29, one press at a time.",
   "main": "main.js",
   "author": "Theo",

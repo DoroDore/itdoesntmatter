@@ -19,6 +19,8 @@ fail() {
 EV="33.4.11"
 ARCH="$(uname -m)"; [ "$ARCH" = "x86_64" ] && EARCH="x64" || EARCH="arm64"
 SRC="$ROOT/source"
+# The version lives only in source/package.json (plutil reads JSON too).
+VER="$(plutil -extract version raw -o - "$SRC/package.json")" || fail "couldn't read the version from source/package.json"
 # One Electron download shared by every app in the family (Day by Day, Point by Point, …)
 CACHE="$HOME/Library/Caches/Theo Apps/Electron"
 ZIPNAME="electron-v$EV-darwin-$EARCH.zip"
@@ -56,7 +58,7 @@ RES="$APP/Contents/Resources"
 echo "  Adding the Day by Day files…"
 rm -f "$RES/default_app.asar"
 mkdir -p "$RES/app"
-cp "$SRC/package.json" "$SRC/main.js" "$SRC/preload.js" "$SRC/index.html" "$SRC/tray.html" "$SRC/trayTemplate.png" "$SRC/trayTemplate@2x.png" "$RES/app/" || fail "couldn't copy the app files"
+cp "$SRC/package.json" "$SRC/main.js" "$SRC/preload.js" "$SRC/share.js" "$SRC/share-config.json" "$SRC/index.html" "$SRC/tray.html" "$SRC/trayTemplate.png" "$SRC/trayTemplate@2x.png" "$RES/app/" || fail "couldn't copy the app files"
 cp -R "$SRC/fonts" "$RES/app/" || fail "couldn't copy the fonts"
 cp "$SRC/icon.icns" "$RES/electron.icns" || fail "couldn't copy the icon"
 
@@ -64,8 +66,8 @@ PL="$APP/Contents/Info.plist"
 $PB -c "Set :CFBundleName Day by Day" "$PL"
 $PB -c "Set :CFBundleDisplayName Day by Day" "$PL" 2>/dev/null || $PB -c "Add :CFBundleDisplayName string Day by Day" "$PL"
 $PB -c "Set :CFBundleIdentifier com.theo.daybyday" "$PL"
-$PB -c "Set :CFBundleShortVersionString 1.7.0" "$PL"
-$PB -c "Set :CFBundleVersion 1.7.0" "$PL"
+$PB -c "Set :CFBundleShortVersionString $VER" "$PL"
+$PB -c "Set :CFBundleVersion $VER" "$PL"
 $PB -c "Set :NSHumanReadableCopyright © $(date +%Y) Theo" "$PL" 2>/dev/null || $PB -c "Add :NSHumanReadableCopyright string © $(date +%Y) Theo" "$PL"
 
 echo "  Signing (local, ad-hoc)…"

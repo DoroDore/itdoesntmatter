@@ -1,0 +1,15 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "Day by Day (debug main.js)",
+      "type": "node",
+      "request": "launch",
+      "preLaunchTask": "Get Electron",
+      "runtimeExecutable": "${env:HOME}/Library/Caches/Theo Apps/Electron/dev/Electron.app/Contents/MacOS/Electron",
+      "args": ["${workspaceFolder}/source"],
+      "env": { "DAYBYDAY_DEV": "1" },
+      "outputCapture": "std"
+    }
+  ]
+}
