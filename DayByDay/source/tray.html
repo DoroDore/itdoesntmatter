@@ -10,40 +10,41 @@
 @font-face{font-family:"Fraunces";src:url("fonts/fraunces-latin-full-italic.woff2") format("woff2");font-weight:100 900;font-style:italic;font-display:block;unicode-range:U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD}
 @font-face{font-family:"Fraunces";src:url("fonts/fraunces-latin-ext-full-normal.woff2") format("woff2");font-weight:100 900;font-style:normal;font-display:block;unicode-range:U+0100-02BA,U+02BD-02C5,U+02C7-02CC,U+02CE-02D7,U+02DD-02FF,U+0304,U+0308,U+0329,U+1D00-1DBF,U+1E00-1E9F,U+1EF2-1EFF,U+2020,U+20A0-20AB,U+20AD-20C0,U+2113,U+2C60-2C7F,U+A720-A7FF}
 @font-face{font-family:"Fraunces";src:url("fonts/fraunces-latin-ext-full-italic.woff2") format("woff2");font-weight:100 900;font-style:italic;font-display:block;unicode-range:U+0100-02BA,U+02BD-02C5,U+02C7-02CC,U+02CE-02D7,U+02DD-02FF,U+0304,U+0308,U+0329,U+1D00-1DBF,U+1E00-1E9F,U+1EF2-1EFF,U+2020,U+20A0-20AB,U+20AD-20C0,U+2113,U+2C60-2C7F,U+A720-A7FF}
-/* Menu bar popover: a small card of the app's blue paper and brown ink (brown paper, blue ink in dark mode) that opens from its center outward. */
+/* Menu bar popover: a small printed card of the app's pale blue paper and brown ink (brown paper, blue ink in dark mode), with a fine double rule, that opens from its center outward. */
 :root{
-  --paper:#B4C3DA; --paper-edge:#9EB0CD; --ink:#2A1A15; --dim:#54433E; --stamp:#7A3329; --btn-ink:#D6DFEC;
+  --paper:#D3DFEC; --paper-edge:#C2D1E4; --ink:#2A1A15; --dim:#584640; --stamp:#93302A; --btn-ink:#E3EBF4;
   --display:"Fraunces",Georgia,serif;
   --ui:"Fraunces",Georgia,serif;
   color-scheme:light;
 }
 @media (prefers-color-scheme: dark){:root{
-  --paper:#2B1D18; --paper-edge:#160E0C; --ink:#CDD8EA; --dim:#8F9CB2; --stamp:#DE9F8F; --btn-ink:#1E1411;
+  --paper:#291B17; --paper-edge:#170F0C; --ink:#D3DEEC; --dim:#929FB4; --stamp:#E59C90; --btn-ink:#1C1310;
   color-scheme:dark}}
 *{box-sizing:border-box}
 html,body{margin:0;height:100%;background:transparent;overflow:hidden;-webkit-user-select:none;user-select:none;cursor:default}
 body{font-family:var(--ui);color:var(--ink);-webkit-font-smoothing:antialiased;padding:6px 14px 18px}
 .card{
-  position:relative;height:100%;border-radius:16px;
+  position:relative;height:100%;border-radius:4px;
   background:radial-gradient(120% 100% at 50% 0%,var(--paper) 0%,var(--paper-edge) 80%);
   border:1px solid color-mix(in srgb,var(--ink) 16%,transparent);
   box-shadow:0 10px 28px rgba(0,0,0,.3),0 1px 0 rgba(255,255,255,.12) inset;
   display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;padding:18px 18px 16px;
-  clip-path:inset(0 50% 0 50% round 16px);opacity:.4;
+  clip-path:inset(0 50% 0 50% round 4px);opacity:.4;
   transition:clip-path .32s cubic-bezier(.2,.8,.2,1),opacity .2s ease;
 }
-.open .card{clip-path:inset(-40px -40px -40px -40px round 16px);opacity:1}
+.open .card{clip-path:inset(-40px -40px -40px -40px round 4px);opacity:1}
+.card::before{content:"";position:absolute;inset:7px;border:3px double color-mix(in srgb,var(--ink) 28%,transparent);pointer-events:none}
 .label{font-size:10.5px;font-weight:600;letter-spacing:.16em;text-transform:uppercase;color:var(--dim)}
 .pending .label{color:var(--stamp)}
-.num{font-family:var(--display);font-style:italic;font-weight:800;font-variation-settings:"SOFT" 100,"WONK" 1;font-size:72px;line-height:.95;letter-spacing:-.02em;font-variant-numeric:lining-nums tabular-nums;
+.num{font-family:var(--display);font-style:italic;font-weight:300;font-variation-settings:"SOFT" 0,"WONK" 1;font-size:76px;line-height:.95;letter-spacing:-.01em;font-variant-numeric:lining-nums tabular-nums;
   transform:translateY(6px);opacity:0;transition:transform .35s .12s cubic-bezier(.2,.8,.2,1),opacity .3s .12s}
 .open .num{transform:none;opacity:1}
 .pending .num{color:color-mix(in srgb,var(--ink) 35%,transparent)}
-.sub{font-size:12px;color:var(--dim);margin-bottom:12px;opacity:0;transition:opacity .3s .2s}
+.sub{font-size:12.5px;font-style:italic;color:var(--dim);margin-bottom:12px;opacity:0;transition:opacity .3s .2s}
 .open .sub{opacity:1}
 button{
-  width:100%;font:inherit;font-family:var(--display);font-style:italic;font-weight:500;font-size:15px;color:var(--btn-ink);
-  background:var(--ink);border:0;border-radius:10px;padding:10px 12px;cursor:pointer;
+  position:relative;width:100%;font:inherit;font-family:var(--display);font-weight:650;font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:var(--btn-ink);
+  background:var(--ink);border:0;border-radius:2px;padding:11px 12px;cursor:pointer;
   opacity:0;transition:opacity .3s .24s,background .15s,transform .1s;
 }
 .open button{opacity:1}
@@ -58,7 +59,7 @@ button:focus-visible{outline:2px solid var(--stamp);outline-offset:2px}
 .flip.flipped .face.back{opacity:1;transform:none}
 .flip{position:relative}
 .back .num{font-size:52px}
-.caps{font-size:11.5px;color:var(--stamp);margin:-6px 0 10px;display:flex;align-items:center;gap:6px}
+.caps{font-size:12px;font-style:italic;color:var(--stamp);margin:-6px 0 10px;display:flex;align-items:center;gap:6px}
 .caps::before{content:"";width:6px;height:6px;border-radius:50%;background:var(--stamp)}
 @media (prefers-reduced-motion: reduce){.face{transition:none!important}}
 @media (prefers-reduced-motion: reduce){.card,.num,.sub,button{transition:none!important}}

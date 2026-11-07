@@ -13,11 +13,14 @@ Day by Day is the first app in a small set of personal Mac apps. Read this befor
 
 ## Look
 
-- **Day by Day's palette (blue paper, brown ink, since 1.8):** Day by Day moved off the family greens to match a hand-lettered print: light blue paper, dark brown ink, and a cream label with a rust-red stamp. All colors are tokens on `:root`, redefined under `prefers-color-scheme: dark`, where it turns over to brown paper with blue ink. Every text color passes WCAG AA on the surfaces it sits on.
-  - Light: `--bg #A7B8D3`, `--surface #BFCCE0`, `--ink #2A1A15`, `--muted #54433E`, `--line #8E98AE`, `--accent #4A2D24` (text on it `#D6DFEC`), `--wash #AEBDD6`, `--stamp #7A3329`, `--cream #E6E0CF`, `--danger #80271D`
-  - Dark: `--bg #1E1411`, `--surface #291C17`, `--ink #CDD8EA`, `--muted #97A3B8`, `--line #4E3B32`, `--accent #A9BAD5`, `--wash #35251F`, `--stamp #DE9F8F`, `--cream #3B2620`, `--danger #E8907F`
-  - The curtain and the menu bar card use their own `--c-*` tokens: a full sheet of the paper in light mode, brown in dark mode. The page and the curtain carry a faint paper grain (`--grain`, an SVG noise tile).
-  - The stamp and the cream label take gold's place: they mark only special things (core memories, milestones, opened capsules). `--danger` is for warnings.
+- **Day by Day's look (printed matter on pale blue paper, since 1.8):** Day by Day moved off the family greens to match hand-lettered posters and prints: pale blue paper, dark brown ink, crimson script for special things, and a cream label like a pasted-on tag. All colors are tokens on `:root`, redefined under `prefers-color-scheme: dark`, where it turns over to brown paper with pale blue ink. Every text color passes WCAG AA (4.5:1) on the surfaces it sits on.
+  - Light: `--bg #CAD8E9`, `--surface #D6E1EE`, `--ink #2A1A15`, `--muted #584640`, `--line #9AA3B1` (rules), `--hair #B2BECF` (fine rules), `--accent #3A241D` (text on it `#E3EBF4`), `--wash #BBCBE0`, `--stamp #93302A` (crimson), `--cream #EEE8D8`, `--danger #8C2820`
+  - Dark: `--bg #1C1310`, `--surface #251915`, `--ink #D3DEEC`, `--muted #9EAABD`, `--line #5C483E`, `--hair #3B2C26`, `--accent #C2D0E4`, `--wash #30221D`, `--stamp #E59C90`, `--cream #3A2620`, `--danger #EC9484`
+  - The curtain and the menu bar card use their own `--c-*` tokens. The page and the curtain carry a faint paper grain (`--grain`, an SVG noise tile).
+  - Crimson and the cream label take gold's place: they mark only special things (core memories, "Today I…", top words, year titles, opened capsules). `--danger` is for warnings.
+  - **No cards.** Sections sit on the page, divided by fine rules (`--line`, `--hair`), with square corners (2px at most). Inputs are underlines, the entry is a ruled page, buttons are thin boxes with italic labels, the primary button is solid ink in spaced capitals, and chosen chips are solid ink. Photos and opened capsules sit on the page like pasted-in paper, with a small shadow.
+  - **Masthead:** the title is centered in thin script, with the cream "29" label pasted over its edge and tilted slightly. Tabs underneath are spaced capitals, the chosen one underlined.
+  - **Ornament:** a pen flourish (`--flourish`, an SVG used as a mask so it takes the ink color) under the day count and the new-day number, and a double rule around the new-day curtain and the menu bar card.
 - **Family palette (calm greens, still used by Point by Point and Word by Word):**
   - Light: `--bg #EEF3EF`, `--surface #FFFFFF`, `--ink #13241B`, `--muted #5B6F64`, `--line #D3DFD7`, `--accent #2C7A57`, `--wash #E1EEE5`, `--gold #9A7008`, `--gold-soft #F4ECD4`
   - Dark: `--bg #0D1612`, `--surface #14211B`, `--ink #E2EDE6`, `--muted #8EA597`, `--line #243A2F`, `--accent #6CC99A`, `--wash #1A2D23`, `--gold #E0BB55`, `--gold-soft #2A2615`
@@ -25,22 +28,20 @@ Day by Day is the first app in a small set of personal Mac apps. Read this befor
   - Gold is used only for things that are special: core memories, milestones, ready time capsules, and (in Point by Point) a month where you spent less than the last one, and (in Word by Word) a poem's anniversary. Never for warnings.
 - **Type:** fonts are bundled locally as woff2 in `fonts/` (from @fontsource), never loaded from the web.
   - Bricolage Grotesque (wght, 800 for big numbers) is the family's display face.
-  - **Day by Day uses one face, Fraunces** (variable: `wght` 100–900, `opsz`, `SOFT`, `WONK`; the "full" files from @fontsource-variable, Latin and Latin Extended). Weight carries the meaning:
-    - writing is light (`--write`, 340), the interface is regular, labels are 650 in spaced capitals, and numbers and headings are 700–850;
-    - display type is soft and a little wonky (`--soft`: `"SOFT" 100, "WONK" 1`), after the hand-lettered posters it's modeled on;
-    - weight is also data: written days are bold on the calendar and empty days light, the word cloud runs 250–900 by how often a word comes up, and the new-day number is thin (200) until you press the button, then fills in to 850;
+  - **Day by Day uses one face, Fraunces** (variable: `wght` 100–900, `opsz`, `SOFT`, `WONK`; the "full" files from @fontsource-variable, Latin and Latin Extended). Weight varies on purpose, like the posters it's modeled on:
+    - big numbers and titles are a thin calligraphic italic (200–450, `--swash`: `"SOFT" 0, "WONK" 1`), writing is light (`--write`, 340), and credits are bold spaced capitals (600–650) or solid italic stat numbers (650);
+    - weight is also data: written days are bold on the calendar and empty days light, the word cloud runs 250–800 by how often a word comes up, and the new-day number is a hairline (200) until you press the button, then fills in to 500;
     - optical size follows the font size on its own; numbers use `lining-nums`.
-  - The new-day curtain has a printed-card frame (a double rule inset 22px).
   - Newsreader (italic for prompts like "Today I…") is the family's writing face.
   - JetBrains Mono is for small numeric labels.
   - The system font is used for UI.
-- **Layout:** one centered column (max 680px) under a draggable hidden-inset title strip, with pill tabs at the top right. Cards ("paper") are white surfaces with 1px `--line` borders and 16–22px radius. Uppercase 11px letter-spaced labels. Chips for tags and choices, with `aria-pressed`. Tabular numbers everywhere digits line up.
+- **Layout (the family's):** one centered column (max 680px) under a draggable hidden-inset title strip, with pill tabs at the top right. Cards ("paper") are white surfaces with 1px `--line` borders and 16–22px radius. Uppercase 11px letter-spaced labels. Chips for tags and choices, with `aria-pressed`. Tabular numbers everywhere digits line up.
 - **Motion:** sparing. Numbers count up with an ease-out. Popovers and reveals open from the center outward (`clip-path: inset(0 50% 0 50%)` to full). Everything respects `prefers-reduced-motion`.
 - **Copy:** short, plain and warm. Buttons say exactly what happens.
 
 ## Patterns worth reusing
 
-- **Menu bar:** a template icon (black plus alpha, `trayTemplate.png` and `@2x`). Left-click opens a small card (forest green in the family; blue paper in Day by Day), a `type: "panel"` BrowserWindow so it doesn't pull you out of full-screen apps. Right-click shows Open and Quit. Closing the window hides the app to the menu bar and optionally hides the Dock icon.
+- **Menu bar:** a template icon (black plus alpha, `trayTemplate.png` and `@2x`). Left-click opens a small card (forest green in the family; a framed card of the blue paper in Day by Day), a `type: "panel"` BrowserWindow so it doesn't pull you out of full-screen apps. Right-click shows Open and Quit. Closing the window hides the app to the menu bar and optionally hides the Dock icon.
 - **App icon:** a rounded-square forest gradient (#2E7050 to #14402E) with one bold mint mark in Bricolage 800. Day by Day uses "29", Point by Point uses ".00", Word by Word uses "/" (drawn slightly heavier so it matches the digits' weight). A sibling app should use its own single mark in the same treatment.
 - **Settings:** grouped paper cards. Toggles save immediately; for related fields there's one explicit "Save" button.
 - **Photos:** import through `sips` (built into macOS, so HEIC works), then redraw on a canvas in the page. That makes the photo upright, at most 2000px, and free of metadata (no location). Store it next to the data file in `photos/`, referenced by file name.
