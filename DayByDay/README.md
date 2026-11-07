@@ -24,13 +24,17 @@ If you write on paper, click **Add a photo of your paper journal** under "Today 
 Open the **Friends** tab, type your name and press **Turn on Friends**. You get a six-character friend code.
 
 - **Connecting:** send your code to a friend. When they add it and you accept, or you add theirs, you see each other. Friends of friends don't see you.
-- **What friends always see:** whether you've written each day, plus your day number and streak.
-- **What they see only if you choose:** under each entry, **Share a line from this entry** (up to 280 characters, starting with your first sentence, which you can edit) and **Share the photo**. Both are off unless you turn them on for that entry. Turning them off later removes them from the server.
+- **What friends always see:** whether you've written each day, and your streak.
+- **What they see only if you choose:**
+  - Under each entry, **Share a line from this entry** (up to 280 characters, starting with your first sentence, which you can edit) and **Share the photo**. Both are off unless you turn them on for that entry. Turning them off later hides them from friends right away and deletes the photo from the server.
+  - Under **You** in the Friends tab, **Show friends my day number**. It's off by default because, with the date, it tells friends your birthday. Turning it off removes it from everything you've shared.
 - **Your entries never leave the Mac.** Only those few things do.
 - The Today tab shows which friends have written today. Click it to open Friends.
 - **Leave Friends** (at the bottom of the tab) deletes your code, your friends list and everything you shared. Entries on this Mac stay.
 
 If you write offline, what friends would see waits and is sent when you're back online.
+
+Leave Friends needs a working sign-in, because that's what proves the shares are yours. If a Mac is ever signed out (for example, its sign-in was deleted in Supabase), what it shared stays visible to the friends it had. To remove it, the person running Supabase deletes that user under **Authentication → Users**, which deletes their profile, friendships and posts along with it.
 
 ## Setting up Friends (once, by whoever builds the app)
 
@@ -48,7 +52,7 @@ Friends runs on a free [Supabase](https://supabase.com) project that everyone in
 
 Supabase pauses a free project after a week with no use. If that happens, restore it from the dashboard.
 
-To test `setup.sql`'s rules on your Mac without Supabase: `brew install postgresql@16`, then run `supabase/test/run.sh`.
+To test, run `dev/test.sh` (in VS Code: **Terminal → Run Task → Test Day by Day**). It tests the Friends client against a fake Supabase and checks that every file parses, using only tools built into macOS. If Postgres is installed (`brew install postgresql@16`), it also tests `setup.sql`'s privacy rules without Supabase.
 
 ## Words
 

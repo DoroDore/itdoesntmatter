@@ -34,6 +34,7 @@ contextBridge.exposeInMainWorld("dbd", {
     remove: (id) => ipcRenderer.invoke("share:remove", id),
     push: (post) => ipcRenderer.invoke("share:push", post),
     photo: (objectPath, version) => ipcRenderer.invoke("share:photo", objectPath, version),
+    hideCounts: () => ipcRenderer.invoke("share:hideCounts"),
     leave: () => ipcRenderer.invoke("share:leave")
   }
 });

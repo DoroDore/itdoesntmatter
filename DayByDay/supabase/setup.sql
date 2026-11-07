@@ -1,6 +1,7 @@
 -- Day by Day: friends and sharing.
 -- Run once in your Supabase project: Dashboard → SQL Editor → New query → paste all of this → Run.
--- Safe to run again after changes: tables keep their data; functions and policies are replaced.
+-- Safe to run again: functions and policies are replaced, and tables keep their data. Tables are only
+-- created if missing, though, so changing a column or check later needs its own `alter table`.
 --
 -- What lives here is only what people choose to share:
 --   profiles     a display name and a friend code
@@ -43,6 +44,7 @@ create table if not exists public.posts (
   -- a post can only point at its owner's photo for that day
   check (photo_path is null or photo_path = user_id::text || '/' || to_char(day, 'YYYY-MM-DD') || '.jpg')
 );
+create index if not exists posts_photo_path on public.posts (photo_path) where photo_path is not null;
 
 -- 2. Who can see what ---------------------------------------------------------------------------
 -- Everything is read through row-level security. Writes go through the functions below,
@@ -57,12 +59,15 @@ revoke insert, update, delete on public.profiles, public.friendships from authen
 grant select on public.profiles, public.friendships to authenticated;
 grant select, insert, update, delete on public.posts to authenticated;
 
-create or replace function public.are_friends(a uuid, b uuid) returns boolean
+-- Are you and `other` friends? Only ever about the caller, so nobody can use it to map
+-- who else is friends with whom.
+create or replace function public.is_friend(other uuid) returns boolean
 language sql stable security definer set search_path = '' as $$
   select exists (
     select 1 from public.friendships f
     where f.accepted
-      and ((f.requester = a and f.addressee = b) or (f.requester = b and f.addressee = a))
+      and ((f.requester = auth.uid() and f.addressee = other)
+        or (f.requester = other and f.addressee = auth.uid()))
   );
 $$;
 
@@ -86,7 +91,7 @@ create policy "daybyday: see your own friendships" on public.friendships
 drop policy if exists "daybyday: read your posts and friends' posts" on public.posts;
 create policy "daybyday: read your posts and friends' posts" on public.posts
   for select to authenticated
-  using (user_id = (select auth.uid()) or public.are_friends((select auth.uid()), user_id));
+  using (user_id = (select auth.uid()) or public.is_friend(user_id));
 
 drop policy if exists "daybyday: add your own posts" on public.posts;
 create policy "daybyday: add your own posts" on public.posts
@@ -103,6 +108,9 @@ drop policy if exists "daybyday: delete your own posts" on public.posts;
 create policy "daybyday: delete your own posts" on public.posts
   for delete to authenticated
   using (user_id = (select auth.uid()));
+
+-- the first version had are_friends(a, b), which answered for any two people
+drop function if exists public.are_friends(uuid, uuid);
 
 -- 3. Functions the app calls ------------------------------------------------------------------
 
@@ -220,16 +228,17 @@ begin
   end;
 end $$;
 
-revoke execute on function public.are_friends(uuid, uuid), public.new_friend_code(),
+revoke execute on function public.is_friend(uuid), public.new_friend_code(),
   public.save_profile(text), public.add_friend(text), public.accept_friend(uuid),
   public.remove_friend(uuid), public.my_friends(), public.delete_me() from public, anon;
-grant execute on function public.are_friends(uuid, uuid), public.save_profile(text),
+grant execute on function public.is_friend(uuid), public.save_profile(text),
   public.add_friend(text), public.accept_friend(uuid), public.remove_friend(uuid),
   public.my_friends(), public.delete_me() to authenticated;
 
 -- 4. Shared photos ---------------------------------------------------------------------------
--- A private bucket. Each person writes only in a folder named after their user id;
--- friends can read it. JPEG only, 5 MB at most (the app sends about 0.5 MB).
+-- A private bucket. Each person writes only in a folder named after their user id. A friend can read
+-- a photo only while one of its owner's posts points at it, so unsharing hides it right away even if
+-- deleting the file fails. JPEG only, 5 MB at most (the app sends about 0.5 MB).
 
 insert into storage.buckets (id, name, public, file_size_limit, allowed_mime_types)
 values ('journal-photos', 'journal-photos', false, 5242880, array['image/jpeg'])
@@ -237,18 +246,6 @@ on conflict (id) do update
   set public = false,
       file_size_limit = excluded.file_size_limit,
       allowed_mime_types = excluded.allowed_mime_types;
-
-create or replace function public.is_friend_folder(folder text) returns boolean
-language sql stable security definer set search_path = '' as $$
-  select exists (
-    select 1 from public.friendships f
-    where f.accepted
-      and ((f.requester = auth.uid() and f.addressee::text = folder)
-        or (f.addressee = auth.uid() and f.requester::text = folder))
-  );
-$$;
-revoke execute on function public.is_friend_folder(text) from public, anon;
-grant execute on function public.is_friend_folder(text) to authenticated;
 
 drop policy if exists "daybyday: upload your own photos" on storage.objects;
 create policy "daybyday: upload your own photos" on storage.objects
@@ -267,10 +264,15 @@ create policy "daybyday: delete your own photos" on storage.objects
   using (bucket_id = 'journal-photos' and (storage.foldername(name))[1] = (select auth.uid())::text);
 
 drop policy if exists "daybyday: see your photos and friends' photos" on storage.objects;
-create policy "daybyday: see your photos and friends' photos" on storage.objects
+drop policy if exists "daybyday: see your photos and the ones friends share" on storage.objects;
+create policy "daybyday: see your photos and the ones friends share" on storage.objects
   for select to authenticated
   using (
     bucket_id = 'journal-photos'
     and ((storage.foldername(name))[1] = (select auth.uid())::text
-         or public.is_friend_folder((storage.foldername(name))[1]))
+         -- posts' own rules limit this to accepted friends
+         or exists (select 1 from public.posts p where p.photo_path = storage.objects.name))
   );
+
+-- the first version gave friends the whole folder through this
+drop function if exists public.is_friend_folder(text);

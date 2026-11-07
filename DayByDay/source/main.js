@@ -72,7 +72,11 @@ function createWindow() {
   win.on("minimize", () => { if (trayInfo.pending && !quitting) setTimeout(presentNewDay, 300); });
   win.on("closed", () => { win = null; });
   win.webContents.setWindowOpenHandler(({ url }) => { shell.openExternal(url); return { action: "deny" }; });
+  stayPut(win);
 }
+// The app is one page and never navigates. Without this, a file dropped on the window replaces the
+// app with that file, and a dropped .html page would get the preload's window.dbd.
+function stayPut(w) { w.webContents.on("will-navigate", (e) => e.preventDefault()); }
 function hideToMenuBar() {
   if (!win) return;
   win.hide();
@@ -129,6 +133,7 @@ function createPopover() {
   // skipTransformProcessType stops Electron from briefly flipping the app's Dock state, which also causes a Space switch
   pop.setVisibleOnAllWorkspaces(true, { visibleOnFullScreen: true, skipTransformProcessType: true });
   pop.loadFile(path.join(__dirname, "tray.html"));
+  stayPut(pop);
   pop.on("blur", hidePopover);
 }
 function hidePopover() {
@@ -298,6 +303,7 @@ ipcMain.handle("share:accept", shareCall((id) => share().acceptFriend(id)));
 ipcMain.handle("share:remove", shareCall((id) => share().removeFriend(id)));
 ipcMain.handle("share:push", shareCall((p) => share().push(p)));
 ipcMain.handle("share:photo", shareCall((p, v) => share().friendPhoto(p, v)));
+ipcMain.handle("share:hideCounts", shareCall(() => share().hideCounts()));
 ipcMain.handle("share:leave", shareCall(() => share().leave()));
 
 /* ---------- ipc ---------- */

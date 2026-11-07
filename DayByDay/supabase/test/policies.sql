@@ -6,7 +6,9 @@ select pg_temp.as_user('aaaaaaaa-0000-0000-0000-000000000000');
 
 do $$ declare p record; begin select * into p from public.save_profile('  Ana  '); assert p.name = 'Ana', 'name trimmed'; assert p.code ~ '^[A-HJKMNP-Z2-9]{6}$', 'code alphabet: ' || p.code; raise notice 'PASS: A joined with code %', p.code; end $$;
 
-insert into public.posts (user_id, day, count, streak, snippet) values ('aaaaaaaa-0000-0000-0000-000000000000', '2026-11-07', 313, 4, 'went to the farmers market');
+insert into public.posts (user_id, day, count, streak, snippet, photo_path) values ('aaaaaaaa-0000-0000-0000-000000000000', '2026-11-07', 313, 4, 'went to the farmers market', 'aaaaaaaa-0000-0000-0000-000000000000/2026-11-07.jpg');
+
+do $$ begin assert to_regprocedure('public.are_friends(uuid, uuid)') is null and to_regprocedure('public.is_friend_folder(text)') is null, 'FAIL: old helper functions still exist'; raise notice 'PASS: no function answers about other people''s friendships'; end $$;
 
 do $$ begin begin insert into public.posts (user_id, day) values ('bbbbbbbb-0000-0000-0000-000000000000', '2026-11-07'); raise exception 'FAIL: A posted as B'; exception when insufficient_privilege then raise notice 'PASS: A cannot post as B'; end; end $$;
 
@@ -18,7 +20,7 @@ do $$ begin begin update public.profiles set name = 'Hacked' where true; raise e
 
 do $$ begin begin insert into public.friendships (requester, addressee, accepted) values ('aaaaaaaa-0000-0000-0000-000000000000', 'bbbbbbbb-0000-0000-0000-000000000000', true); raise exception 'FAIL: A forced a friendship'; exception when insufficient_privilege then raise notice 'PASS: friendships only change through functions'; end; end $$;
 
-insert into storage.objects (bucket_id, name) values ('journal-photos', 'aaaaaaaa-0000-0000-0000-000000000000/2026-11-07.jpg');
+insert into storage.objects (bucket_id, name) values ('journal-photos', 'aaaaaaaa-0000-0000-0000-000000000000/2026-11-07.jpg'), ('journal-photos', 'aaaaaaaa-0000-0000-0000-000000000000/2026-11-06.jpg');
 
 do $$ begin begin insert into storage.objects (bucket_id, name) values ('journal-photos', 'bbbbbbbb-0000-0000-0000-000000000000/2026-11-07.jpg'); raise exception 'FAIL: A uploaded into B''s folder'; exception when insufficient_privilege then raise notice 'PASS: A cannot upload into B''s folder'; end; end $$;
 
@@ -53,6 +55,24 @@ do $$ declare j json; begin j := public.my_friends(); assert json_array_length(j
 do $$ declare j json; begin perform public.accept_friend('aaaaaaaa-0000-0000-0000-000000000000'); j := public.my_friends(); assert j->0->>'state' = 'friends', 'FAIL: not friends'; assert j->0->'posts'->0->>'snippet' = 'went to the farmers market', 'FAIL: snippet ' || j::text; assert (select count(*) from storage.objects) = 1, 'FAIL: friend cannot see photo'; raise notice 'PASS: after accepting, B sees A''s post and photo: %', j; end $$;
 
 do $$ begin begin delete from public.posts where user_id = 'aaaaaaaa-0000-0000-0000-000000000000'; assert (select count(*) from public.posts where user_id = 'aaaaaaaa-0000-0000-0000-000000000000') = 1, 'FAIL: B deleted A''s post'; raise notice 'PASS: friends can read but not delete your posts'; end; end $$;
+
+do $$ begin assert (select count(*) from storage.objects where name like '%2026-11-06.jpg') = 0, 'FAIL: friend sees a photo no post points at'; raise notice 'PASS: friends see only photos a post shares, not the whole folder'; end $$;
+
+select pg_temp.as_user('aaaaaaaa-0000-0000-0000-000000000000');
+
+update public.posts set photo_path = null where day = '2026-11-07';
+
+select pg_temp.as_user('bbbbbbbb-0000-0000-0000-000000000000');
+
+do $$ begin assert (select count(*) from storage.objects) = 0, 'FAIL: unshared photo still readable by a friend'; raise notice 'PASS: unsharing a photo hides it from friends at once, even before the file is deleted'; end $$;
+
+select pg_temp.as_user('aaaaaaaa-0000-0000-0000-000000000000');
+
+do $$ begin assert (select count(*) from storage.objects) = 2, 'FAIL: owner cannot see own photos'; raise notice 'PASS: you always see your own photos'; end $$;
+
+update public.posts set photo_path = 'aaaaaaaa-0000-0000-0000-000000000000/2026-11-07.jpg' where day = '2026-11-07';
+
+select pg_temp.as_user('bbbbbbbb-0000-0000-0000-000000000000');
 
 select pg_temp.as_user('cccccccc-0000-0000-0000-000000000000');
 

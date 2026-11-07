@@ -20,6 +20,15 @@
       "problemMatcher": []
     },
     {
+      "label": "Test Day by Day",
+      "detail": "share.js against a fake Supabase, every file parses, and setup.sql's rules if Postgres is installed",
+      "type": "shell",
+      "command": "${workspaceFolder}/dev/test.sh",
+      "group": { "kind": "test", "isDefault": true },
+      "presentation": { "reveal": "always", "panel": "dedicated", "clear": true },
+      "problemMatcher": []
+    },
+    {
       "label": "Get Electron",
       "type": "shell",
       "command": "${workspaceFolder}/dev/run.sh",

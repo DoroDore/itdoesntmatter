@@ -472,7 +472,7 @@ const esc=s=>String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",
 const reduced=()=>matchMedia("(prefers-reduced-motion: reduce)").matches;
 
 const DEFAULT_TAGS=["Assessment","Event","Exercise","Socializing","Studying"];
-let settings={bMonth:12,bDay:29,birthYear:null,mode:"birthday",fmt:"day {n}",tags:DEFAULT_TAGS.slice(),reminder:true,reminderTime:"22:00",openAtLogin:true};
+let settings={bMonth:12,bDay:29,birthYear:null,mode:"birthday",fmt:"day {n}",tags:DEFAULT_TAGS.slice(),reminder:true,reminderTime:"22:00",openAtLogin:true,shareCount:false};
 let days={};
 let capsules={};
 let viewMonth=null, selKey=null, curtainUp=false, calTag=null;
@@ -749,7 +749,12 @@ async function cleanPhoto(dataUrl){
 
 /* ---------- entry editor ---------- */
 const STAR='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round" aria-hidden="true"><path d="M12 3l2.7 5.6 6.1.9-4.4 4.3 1 6.1L12 17l-5.4 2.9 1-6.1-4.4-4.3 6.1-.9z"/></svg>';
-const firstSentence=t=>(t.trim().split(/(?<=[.!?])\s/)[0]||"").slice(0,280);
+const clip=(s,n)=>Array.from(String(s)).slice(0,n).join(""); // by character, so an emoji isn't cut in half
+const firstSentence=t=>clip(t.trim().split(/(?<=[.!?])\s/)[0]||"",280);
+// a file dropped anywhere but an entry's box does nothing (main.js also refuses to navigate to it)
+const hasFiles=e=>!!e.dataTransfer&&[...e.dataTransfer.types].includes("Files");
+document.addEventListener("dragover",e=>{if(hasFiles(e)&&!e.defaultPrevented){e.preventDefault();e.dataTransfer.dropEffect="none"}});
+document.addEventListener("drop",e=>{if(hasFiles(e))e.preventDefault()});
 function buildEditor(host,k,isToday){
   host.dataset.built=k;
   const d=days[k]||{};const id=isToday?"t":"c";
@@ -833,7 +838,7 @@ function buildEditor(host,k,isToday){
     if(!photo&&!validText(ta.value))return;
     const core=ct.getAttribute("aria-pressed")==="true";
     const tags=sortTags([...$(id+"-tags").querySelectorAll('.chip[aria-pressed="true"]')].map(b=>b.dataset.tag));
-    const share=withShare?{line:$(id+"-shLine").checked?$(id+"-snip").value.trim().slice(0,280):"",photo:!!photo&&$(id+"-shPhoto").checked}:days[k]?.share;
+    const share=withShare?{line:$(id+"-shLine").checked?clip($(id+"-snip").value.trim(),280):"",photo:!!photo&&$(id+"-shPhoto").checked}:days[k]?.share;
     days[k]={...(days[k]||{}),text:ta.value.trim(),tags,core,coreTitle:core?tt.value.trim():"",photo,n:countFor(k),updatedAt:Date.now(),...(share?{share}:{})};
     if(isToday)ui.del("draft:"+k);
     persist();
@@ -1306,7 +1311,8 @@ async function loadFriends(force){
 function pushShare(k){
   if(!canShareApi()||!shareState.joined||!hasEntry(k))return;
   const d=days[k],s=d.share||{};
-  api.share.push({day:k,count:countFor(k),streak:streakAt(k),snippet:s.line||null,photo:s.photo&&d.photo?d.photo:null})
+  // the day number only if you chose to show it: with the date, it gives away your birthday
+  api.share.push({day:k,count:settings.shareCount?countFor(k):null,streak:streakAt(k),snippet:s.line||null,photo:s.photo&&d.photo?d.photo:null})
     .then(r=>{if(r&&r.ok&&r.data)shareState.unsent=r.data.unsent||0}).catch(()=>{});
 }
 function sharedNote(d){
@@ -1351,8 +1357,8 @@ function buildFriendsShell(host,mode){
     host.innerHTML=`<div class="paper settings">
       <div class="label">Friends</div>
       <h2 class="fhead">See when your friends have written</h2>
-      <p class="hint" style="margin:0">Friends see whether you've written each day, with your day number and streak. Your entries stay on this Mac. When you want to, you can share one line or the photo from an entry.</p>
-      ${shareState.lost?`<p class="hint warn" style="margin:0">This Mac was signed out of Friends, so it needs a new code. Your friends will need to add you again.</p>`:""}
+      <p class="hint" style="margin:0">Friends see whether you've written each day, and your streak. Your entries stay on this Mac. When you want to, you can share one line or the photo from an entry.</p>
+      ${shareState.lost?`<p class="hint warn" style="margin:0">This Mac was signed out of Friends, so it needs a new code, and your friends will need to add you again. What you shared before is still visible to the friends you had then. Whoever runs Friends can delete that old account in Supabase.</p>`:""}
       <label>Your name, as friends see it<input type="text" id="fName" maxlength="40" placeholder="e.g. Sam" autocomplete="off"></label>
       <div class="row"><button class="save" id="fJoin" disabled>Turn on Friends</button><span class="hint" id="fMsg"></span></div>
     </div>`;
@@ -1383,6 +1389,8 @@ function buildFriendsShell(host,mode){
       <div class="label">You</div>
       <label>Your name, as friends see it<input type="text" id="fRename" maxlength="40" autocomplete="off"></label>
       <div class="row"><button class="ghost" id="fRenameBtn">Save name</button><span class="saved" id="fRenameMsg"></span></div>
+      <label class="check"><input type="checkbox" id="fShareCount"> Show friends my day number</label>
+      <p class="hint" style="margin:0" id="fShareCountHint"></p>
       <div class="row"><span class="hint grow" id="fUpdated"></span><button class="ghost" id="fRefresh">Refresh</button></div>
       <div id="fLeaveBox"><button class="linkbtn danger" id="fLeave">Leave Friends</button></div>
     </div>`;
@@ -1407,6 +1415,14 @@ function buildFriendsShell(host,mode){
     const r=await api.share.join(v).catch(()=>null);
     if(r&&r.ok)shareState=r.data;
     $("fRenameMsg").textContent=r&&r.ok?"Saved":(r?r.error:"Something went wrong.");
+  };
+  const sc=$("fShareCount"),scHint=t=>{$("fShareCountHint").textContent=t||`Off unless you turn it on. With the date, it tells friends your birthday${birthMode()?", including the year":""}.`};
+  sc.checked=!!settings.shareCount;scHint();
+  sc.onchange=async()=>{
+    settings.shareCount=sc.checked;persist();scHint();
+    if(sc.checked){pushShare(todayKey());return}
+    const r=await api.share.hideCounts().catch(()=>null);
+    if(!r||!r.ok){settings.shareCount=true;sc.checked=true;persist();scHint(`Couldn't remove it from what you've shared (${r?r.error:"something went wrong"}). Try again.`)}
   };
   $("fRefresh").onclick=()=>loadFriends(true);
   $("fLeave").onclick=()=>{
@@ -1449,7 +1465,8 @@ function renderFriendLists(){
   const up=$("fUpdated");
   up.classList.toggle("warn",!!friendsErr);
   up.textContent=friendsErr||(friendsAt?`Updated ${new Date(friendsAt).toLocaleTimeString([],{hour:"numeric",minute:"2-digit"})}`:"")
-    +(shareState.unsent?` · ${plural(shareState.unsent,"day")} waiting to send`:"");
+    +(shareState.unsent?` · ${plural(shareState.unsent,"day")} waiting to send`:"")
+    +(shareState.stuck?` · ${plural(shareState.stuck,"day")} couldn't be sent (edit and save to try again)`:"");
   const act=async(btn,fn)=>{btn.disabled=true;const r=await fn().catch(()=>null);await loadFriends(true);if(!r||!r.ok){friendsErr=r?r.error:"Something went wrong.";renderFriendLists()}};
   host.querySelectorAll("[data-accept]").forEach(b=>b.onclick=()=>act(b,()=>api.share.accept(b.dataset.accept)));
   host.querySelectorAll("[data-decline]").forEach(b=>b.onclick=()=>act(b,()=>api.share.remove(b.dataset.decline)));
