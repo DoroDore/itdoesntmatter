@@ -5,44 +5,48 @@
 <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; font-src 'self'">
 <title>Day by Day</title>
 <style>
-@font-face{font-family:"Bricolage";src:url("fonts/bricolage-wght.woff2") format("woff2");font-weight:200 800;font-display:block}
-/* Menu bar popover: one green card that opens from its center outward. */
+@font-face{font-family:"Newsreader";src:url("fonts/newsreader-wght.woff2") format("woff2");font-weight:200 800;font-style:normal;font-display:block}
+@font-face{font-family:"Newsreader";src:url("fonts/newsreader-wght-italic.woff2") format("woff2");font-weight:200 800;font-style:italic;font-display:block}
+/* Menu bar popover: a small card of the app's blue paper and brown ink (brown paper, blue ink in dark mode) that opens from its center outward. */
 :root{
-  --forest:#16392B; --forest-deep:#0D241A; --mint:#E4F2E8; --mint-dim:#8DB59D; --gold:#E0BB55;
-  --display:"Bricolage",ui-sans-serif,system-ui,-apple-system,sans-serif;
+  --paper:#B4C3DA; --paper-edge:#9EB0CD; --ink:#2A1A15; --dim:#54433E; --stamp:#7A3329; --btn-ink:#D6DFEC;
+  --display:"Newsreader",Georgia,serif;
   --ui:-apple-system,BlinkMacSystemFont,"SF Pro Text",system-ui,sans-serif;
-  color-scheme:dark;
+  color-scheme:light;
 }
+@media (prefers-color-scheme: dark){:root{
+  --paper:#2B1D18; --paper-edge:#160E0C; --ink:#CDD8EA; --dim:#8F9CB2; --stamp:#DE9F8F; --btn-ink:#1E1411;
+  color-scheme:dark}}
 *{box-sizing:border-box}
 html,body{margin:0;height:100%;background:transparent;overflow:hidden;-webkit-user-select:none;user-select:none;cursor:default}
-body{font-family:var(--ui);color:var(--mint);-webkit-font-smoothing:antialiased;padding:6px 14px 18px}
+body{font-family:var(--ui);color:var(--ink);-webkit-font-smoothing:antialiased;padding:6px 14px 18px}
 .card{
   position:relative;height:100%;border-radius:16px;
-  background:radial-gradient(120% 100% at 50% 0%,var(--forest) 0%,var(--forest-deep) 80%);
-  border:1px solid rgba(228,242,232,.12);
-  box-shadow:0 10px 28px rgba(0,0,0,.35),0 1px 0 rgba(255,255,255,.06) inset;
+  background:radial-gradient(120% 100% at 50% 0%,var(--paper) 0%,var(--paper-edge) 80%);
+  border:1px solid color-mix(in srgb,var(--ink) 16%,transparent);
+  box-shadow:0 10px 28px rgba(0,0,0,.3),0 1px 0 rgba(255,255,255,.12) inset;
   display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;padding:18px 18px 16px;
   clip-path:inset(0 50% 0 50% round 16px);opacity:.4;
   transition:clip-path .32s cubic-bezier(.2,.8,.2,1),opacity .2s ease;
 }
 .open .card{clip-path:inset(-40px -40px -40px -40px round 16px);opacity:1}
-.label{font-size:10.5px;font-weight:600;letter-spacing:.16em;text-transform:uppercase;color:var(--mint-dim)}
-.pending .label{color:var(--gold)}
-.num{font-family:var(--display);font-weight:800;font-size:68px;line-height:.95;letter-spacing:-.045em;font-variant-numeric:tabular-nums;
+.label{font-size:10.5px;font-weight:600;letter-spacing:.16em;text-transform:uppercase;color:var(--dim)}
+.pending .label{color:var(--stamp)}
+.num{font-family:var(--display);font-style:italic;font-weight:400;font-size:72px;line-height:.95;letter-spacing:-.02em;font-variant-numeric:lining-nums tabular-nums;
   transform:translateY(6px);opacity:0;transition:transform .35s .12s cubic-bezier(.2,.8,.2,1),opacity .3s .12s}
 .open .num{transform:none;opacity:1}
-.pending .num{color:rgba(228,242,232,.35)}
-.sub{font-size:12px;color:var(--mint-dim);margin-bottom:12px;opacity:0;transition:opacity .3s .2s}
+.pending .num{color:color-mix(in srgb,var(--ink) 35%,transparent)}
+.sub{font-size:12px;color:var(--dim);margin-bottom:12px;opacity:0;transition:opacity .3s .2s}
 .open .sub{opacity:1}
 button{
-  width:100%;font:inherit;font-family:var(--display);font-weight:600;font-size:14px;color:var(--forest-deep);
-  background:var(--mint);border:0;border-radius:10px;padding:10px 12px;cursor:pointer;
+  width:100%;font:inherit;font-family:var(--display);font-style:italic;font-weight:500;font-size:15px;color:var(--btn-ink);
+  background:var(--ink);border:0;border-radius:10px;padding:10px 12px;cursor:pointer;
   opacity:0;transition:opacity .3s .24s,background .15s,transform .1s;
 }
 .open button{opacity:1}
-button:hover{background:#fff}
+button:hover{background:color-mix(in srgb,var(--ink) 85%,var(--paper))}
 button:active{transform:scale(.98)}
-button:focus-visible{outline:2px solid var(--gold);outline-offset:2px}
+button:focus-visible{outline:2px solid var(--stamp);outline-offset:2px}
 .flip{perspective:400px;display:flex;flex-direction:column;align-items:center;gap:4px;cursor:default}
 .face{display:flex;flex-direction:column;align-items:center;gap:4px;transition:transform .35s cubic-bezier(.2,.8,.2,1),opacity .2s}
 .face.back{position:absolute;inset:0;justify-content:center;opacity:0;transform:rotateX(-90deg)}
@@ -51,8 +55,8 @@ button:focus-visible{outline:2px solid var(--gold);outline-offset:2px}
 .flip.flipped .face.back{opacity:1;transform:none}
 .flip{position:relative}
 .back .num{font-size:52px}
-.caps{font-size:11.5px;color:var(--gold);margin:-6px 0 10px;display:flex;align-items:center;gap:6px}
-.caps::before{content:"";width:6px;height:6px;border-radius:50%;background:var(--gold)}
+.caps{font-size:11.5px;color:var(--stamp);margin:-6px 0 10px;display:flex;align-items:center;gap:6px}
+.caps::before{content:"";width:6px;height:6px;border-radius:50%;background:var(--stamp)}
 @media (prefers-reduced-motion: reduce){.face{transition:none!important}}
 @media (prefers-reduced-motion: reduce){.card,.num,.sub,button{transition:none!important}}
 </style>

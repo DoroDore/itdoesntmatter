@@ -13,13 +13,18 @@ Day by Day is the first app in a small set of personal Mac apps. Read this befor
 
 ## Look
 
-- **Palette (calm greens):** all colors are CSS tokens on `:root`, redefined under `prefers-color-scheme: dark`.
+- **Day by Day's palette (blue paper, brown ink, since 1.8):** Day by Day moved off the family greens to match a hand-lettered print: light blue paper, dark brown ink, and a cream label with a rust-red stamp. All colors are tokens on `:root`, redefined under `prefers-color-scheme: dark`, where it turns over to brown paper with blue ink. Every text color passes WCAG AA on the surfaces it sits on.
+  - Light: `--bg #A7B8D3`, `--surface #BFCCE0`, `--ink #2A1A15`, `--muted #54433E`, `--line #8E98AE`, `--accent #4A2D24` (text on it `#D6DFEC`), `--wash #AEBDD6`, `--stamp #7A3329`, `--cream #E6E0CF`, `--danger #80271D`
+  - Dark: `--bg #1E1411`, `--surface #291C17`, `--ink #CDD8EA`, `--muted #97A3B8`, `--line #4E3B32`, `--accent #A9BAD5`, `--wash #35251F`, `--stamp #DE9F8F`, `--cream #3B2620`, `--danger #E8907F`
+  - The curtain and the menu bar card use their own `--c-*` tokens: a full sheet of the paper in light mode, brown in dark mode. The page and the curtain carry a faint paper grain (`--grain`, an SVG noise tile).
+  - The stamp and the cream label take gold's place: they mark only special things (core memories, milestones, opened capsules). `--danger` is for warnings.
+- **Family palette (calm greens, still used by Point by Point and Word by Word):**
   - Light: `--bg #EEF3EF`, `--surface #FFFFFF`, `--ink #13241B`, `--muted #5B6F64`, `--line #D3DFD7`, `--accent #2C7A57`, `--wash #E1EEE5`, `--gold #9A7008`, `--gold-soft #F4ECD4`
   - Dark: `--bg #0D1612`, `--surface #14211B`, `--ink #E2EDE6`, `--muted #8EA597`, `--line #243A2F`, `--accent #6CC99A`, `--wash #1A2D23`, `--gold #E0BB55`, `--gold-soft #2A2615`
   - Signature "forest" surfaces, the same in both themes: `--forest #16392B`, `--forest-deep #0D241A`, `--mint #E4F2E8`, `--mint-dim #8DB59D`. They're used for full-screen moments and the menu bar card.
   - Gold is used only for things that are special: core memories, milestones, ready time capsules, and (in Point by Point) a month where you spent less than the last one, and (in Word by Word) a poem's anniversary. Never for warnings.
 - **Type:** fonts are bundled locally as woff2 in `fonts/` (from @fontsource), never loaded from the web.
-  - Bricolage Grotesque (wght, 800 for big numbers) is the display face.
+  - Bricolage Grotesque (wght, 800 for big numbers) is the family's display face. Day by Day now uses Newsreader for display too, with big numbers in italic 400 and `lining-nums`, since Newsreader's default figures are old-style.
   - Newsreader (italic for prompts like "Today I…") is for writing.
   - JetBrains Mono is for small numeric labels.
   - The system font is used for UI.
@@ -29,7 +34,7 @@ Day by Day is the first app in a small set of personal Mac apps. Read this befor
 
 ## Patterns worth reusing
 
-- **Menu bar:** a template icon (black plus alpha, `trayTemplate.png` and `@2x`). Left-click opens a small forest-green card, a `type: "panel"` BrowserWindow so it doesn't pull you out of full-screen apps. Right-click shows Open and Quit. Closing the window hides the app to the menu bar and optionally hides the Dock icon.
+- **Menu bar:** a template icon (black plus alpha, `trayTemplate.png` and `@2x`). Left-click opens a small card (forest green in the family; blue paper in Day by Day), a `type: "panel"` BrowserWindow so it doesn't pull you out of full-screen apps. Right-click shows Open and Quit. Closing the window hides the app to the menu bar and optionally hides the Dock icon.
 - **App icon:** a rounded-square forest gradient (#2E7050 to #14402E) with one bold mint mark in Bricolage 800. Day by Day uses "29", Point by Point uses ".00", Word by Word uses "/" (drawn slightly heavier so it matches the digits' weight). A sibling app should use its own single mark in the same treatment.
 - **Settings:** grouped paper cards. Toggles save immediately; for related fields there's one explicit "Save" button.
 - **Photos:** import through `sips` (built into macOS, so HEIC works), then redraw on a canvas in the page. That makes the photo upright, at most 2000px, and free of metadata (no location). Store it next to the data file in `photos/`, referenced by file name.
