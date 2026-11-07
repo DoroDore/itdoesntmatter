@@ -1,0 +1,107 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; font-src 'self'">
+<title>Day by Day</title>
+<style>
+@font-face{font-family:"Bricolage";src:url("fonts/bricolage-wght.woff2") format("woff2");font-weight:200 800;font-display:block}
+/* Menu bar popover: one green card that opens from its center outward. */
+:root{
+  --forest:#16392B; --forest-deep:#0D241A; --mint:#E4F2E8; --mint-dim:#8DB59D; --gold:#E0BB55;
+  --display:"Bricolage",ui-sans-serif,system-ui,-apple-system,sans-serif;
+  --ui:-apple-system,BlinkMacSystemFont,"SF Pro Text",system-ui,sans-serif;
+  color-scheme:dark;
+}
+*{box-sizing:border-box}
+html,body{margin:0;height:100%;background:transparent;overflow:hidden;-webkit-user-select:none;user-select:none;cursor:default}
+body{font-family:var(--ui);color:var(--mint);-webkit-font-smoothing:antialiased;padding:6px 14px 18px}
+.card{
+  position:relative;height:100%;border-radius:16px;
+  background:radial-gradient(120% 100% at 50% 0%,var(--forest) 0%,var(--forest-deep) 80%);
+  border:1px solid rgba(228,242,232,.12);
+  box-shadow:0 10px 28px rgba(0,0,0,.35),0 1px 0 rgba(255,255,255,.06) inset;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;padding:18px 18px 16px;
+  clip-path:inset(0 50% 0 50% round 16px);opacity:.4;
+  transition:clip-path .32s cubic-bezier(.2,.8,.2,1),opacity .2s ease;
+}
+.open .card{clip-path:inset(-40px -40px -40px -40px round 16px);opacity:1}
+.label{font-size:10.5px;font-weight:600;letter-spacing:.16em;text-transform:uppercase;color:var(--mint-dim)}
+.pending .label{color:var(--gold)}
+.num{font-family:var(--display);font-weight:800;font-size:68px;line-height:.95;letter-spacing:-.045em;font-variant-numeric:tabular-nums;
+  transform:translateY(6px);opacity:0;transition:transform .35s .12s cubic-bezier(.2,.8,.2,1),opacity .3s .12s}
+.open .num{transform:none;opacity:1}
+.pending .num{color:rgba(228,242,232,.35)}
+.sub{font-size:12px;color:var(--mint-dim);margin-bottom:12px;opacity:0;transition:opacity .3s .2s}
+.open .sub{opacity:1}
+button{
+  width:100%;font:inherit;font-family:var(--display);font-weight:600;font-size:14px;color:var(--forest-deep);
+  background:var(--mint);border:0;border-radius:10px;padding:10px 12px;cursor:pointer;
+  opacity:0;transition:opacity .3s .24s,background .15s,transform .1s;
+}
+.open button{opacity:1}
+button:hover{background:#fff}
+button:active{transform:scale(.98)}
+button:focus-visible{outline:2px solid var(--gold);outline-offset:2px}
+.flip{perspective:400px;display:flex;flex-direction:column;align-items:center;gap:4px;cursor:default}
+.face{display:flex;flex-direction:column;align-items:center;gap:4px;transition:transform .35s cubic-bezier(.2,.8,.2,1),opacity .2s}
+.face.back{position:absolute;inset:0;justify-content:center;opacity:0;transform:rotateX(-90deg)}
+[hidden]{display:none!important}
+.flip.flipped .face.front{opacity:0;transform:rotateX(90deg)}
+.flip.flipped .face.back{opacity:1;transform:none}
+.flip{position:relative}
+.back .num{font-size:52px}
+.caps{font-size:11.5px;color:var(--gold);margin:-6px 0 10px;display:flex;align-items:center;gap:6px}
+.caps::before{content:"";width:6px;height:6px;border-radius:50%;background:var(--gold)}
+@media (prefers-reduced-motion: reduce){.face{transition:none!important}}
+@media (prefers-reduced-motion: reduce){.card,.num,.sub,button{transition:none!important}}
+</style>
+</head>
+<body>
+<div class="card">
+  <div class="flip" id="flip">
+    <div class="face front"><div class="label" id="label">Day</div><div class="num" id="num">—</div></div>
+    <div class="face back"><div class="label" id="label2">Days alive</div><div class="num" id="num2">—</div></div>
+  </div>
+  <div class="sub" id="sub"></div>
+  <div class="caps" id="caps" hidden></div>
+  <button id="open">Open Day by Day</button>
+</div>
+<script>
+const $=id=>document.getElementById(id);
+function render(info){
+  const pending=!!info.pending;
+  document.body.classList.toggle("pending",pending);
+  $("label").textContent=pending?"A new day is waiting":"Day";
+  $("num").textContent=info.count==null?"—":(pending&&info.prev!=null?info.prev:info.count);
+  $("sub").textContent=pending?"Open the app to count it.":(info.short||"");
+  $("open").textContent=pending?"It's a new day.":"Open Day by Day";
+  // back of the card: the other way of counting
+  const fmt=n=>Number(n).toLocaleString("en-US");
+  if(info.birthMode){$("label2").textContent="Since your birthday";$("num2").textContent=info.sinceBday??"—"}
+  else if(info.alive!=null){$("label2").textContent="Days alive";$("num2").textContent=fmt(info.alive)}
+  else{$("label2").textContent="Of the year";$("num2").textContent=(info.pct??0)+"%"}
+  $("flip").title=info.alive==null&&!info.birthMode?"Add your birth year in Settings to see days alive":"";
+  $("caps").hidden=!info.caps;
+  $("caps").textContent=info.caps===1?"A time capsule is ready":`${info.caps} time capsules are ready`;
+}
+$("flip").onmouseenter=()=>$("flip").classList.add("flipped");
+$("flip").onmouseleave=()=>$("flip").classList.remove("flipped");
+window.dbd.onPopShow(info=>{
+  document.body.classList.remove("open");
+  $("flip").classList.remove("flipped");
+  render(info||{});
+  void document.body.offsetWidth;
+  requestAnimationFrame(()=>requestAnimationFrame(()=>document.body.classList.add("open")));
+  if(document.activeElement&&document.activeElement.blur)document.activeElement.blur();
+});
+window.dbd.onPopHide(()=>document.body.classList.remove("open"));
+$("open").onclick=()=>window.dbd.popOpen();
+document.addEventListener("keydown",e=>{
+  if(e.key==="Escape")window.dbd.popClose();
+  // Return opens the app without the button needing focus (so no focus ring on open)
+  if(e.key==="Enter"&&document.activeElement!==$("open")){e.preventDefault();window.dbd.popOpen()}
+});
+</script>
+</body>
+</html>

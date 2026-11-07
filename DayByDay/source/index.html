@@ -1,0 +1,1240 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; font-src 'self'; img-src 'self' data:">
+<title>Day by Day</title>
+<style>
+@font-face{font-family:"Bricolage";src:url("fonts/bricolage-wght.woff2") format("woff2");font-weight:200 800;font-display:block}
+@font-face{font-family:"Newsreader";src:url("fonts/newsreader-wght.woff2") format("woff2");font-weight:200 800;font-style:normal}
+@font-face{font-family:"Newsreader";src:url("fonts/newsreader-wght-italic.woff2") format("woff2");font-weight:200 800;font-style:italic}
+@font-face{font-family:"JetBrains Mono";src:url("fonts/jetbrains-mono-wght.woff2") format("woff2");font-weight:100 800}
+
+/* Layout: one calm column under a draggable title strip; a full-window "new day" curtain sits above everything until pressed. */
+:root{
+  --bg:#EEF3EF; --surface:#FFFFFF; --ink:#13241B; --muted:#5B6F64; --line:#D3DFD7;
+  --accent:#2C7A57; --accent-ink:#FFFFFF; --wash:#E1EEE5;
+  --gold:#9A7008; --gold-soft:#F4ECD4;
+  --forest:#16392B; --forest-deep:#0D241A; --mint:#E4F2E8; --mint-dim:#8DB59D;
+  --display:"Bricolage",ui-sans-serif,system-ui,-apple-system,sans-serif;
+  --body:"Newsreader",Georgia,serif;
+  --mono:"JetBrains Mono",ui-monospace,Menlo,monospace;
+  --ui:-apple-system,BlinkMacSystemFont,"SF Pro Text",system-ui,sans-serif;
+  color-scheme:light;
+}
+@media (prefers-color-scheme: dark){:root{
+  --bg:#0D1612; --surface:#14211B; --ink:#E2EDE6; --muted:#8EA597; --line:#243A2F;
+  --accent:#6CC99A; --accent-ink:#0B1A13; --wash:#1A2D23;
+  --gold:#E0BB55; --gold-soft:#2A2615; color-scheme:dark}}
+
+*{box-sizing:border-box}
+html,body{margin:0;height:100%}
+body{background:var(--bg);color:var(--ink);font-family:var(--ui);font-size:15px;line-height:1.5;-webkit-font-smoothing:antialiased}
+.titlebar{position:fixed;inset:0 0 auto 0;height:40px;-webkit-app-region:drag;z-index:5}
+.wrap{max-width:680px;margin:0 auto;padding-inline:24px;padding-block:52px 64px;display:flex;flex-direction:column;gap:22px}
+.view{display:flex;flex-direction:column;gap:22px}
+[hidden]{display:none!important}
+button{font:inherit;color:inherit;cursor:pointer}
+button,input,select,textarea,nav{-webkit-app-region:no-drag}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+
+header{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;position:relative;z-index:6}
+.brand{font-family:var(--display);font-weight:800;font-size:19px;letter-spacing:-.01em;display:flex;align-items:center;gap:10px}
+.brand .mark{width:26px;height:26px;border-radius:7px;background:linear-gradient(var(--accent),var(--forest));color:var(--mint);font-size:12px;display:grid;place-items:center;letter-spacing:-.03em}
+nav{display:flex;gap:2px;background:var(--surface);border:1px solid var(--line);border-radius:999px;padding:3px;max-width:100%;overflow-x:auto;scrollbar-width:none}
+nav::-webkit-scrollbar{display:none}
+nav button{border:0;background:none;padding:6px 13px;border-radius:999px;font-size:13px;color:var(--muted);white-space:nowrap}
+nav button[aria-selected="true"]{background:var(--accent);color:var(--accent-ink)}
+
+.label{font-size:11px;letter-spacing:.09em;text-transform:uppercase;color:var(--muted);font-weight:600}
+
+/* counter card */
+.counter{background:var(--surface);border:1px solid var(--line);border-radius:22px;padding:28px 24px 22px;display:flex;flex-direction:column;gap:16px}
+.num{font-family:var(--display);font-weight:800;font-size:clamp(96px,20vw,168px);line-height:.88;letter-spacing:-.045em;font-variant-numeric:tabular-nums;color:var(--accent)}
+.sub{color:var(--muted);font-size:14px}
+.bar{height:6px;background:var(--wash);border-radius:999px;overflow:hidden}
+.bar i{display:block;height:100%;background:var(--accent);border-radius:999px}
+.barlabels{display:flex;justify-content:space-between;gap:8px;font-family:var(--mono);font-size:11px;color:var(--muted);margin-top:6px}
+.status{display:flex;align-items:center;gap:8px;flex-wrap:wrap;border-top:1px dashed var(--line);padding-top:14px}
+.status code{font-family:var(--mono);font-size:14px;background:var(--wash);padding:6px 10px;border-radius:8px;user-select:all}
+.ghost{border:1px solid var(--line);background:none;padding:6px 12px;border-radius:999px;font-size:13px}
+.ghost:hover{border-color:var(--muted)}
+
+.stats{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
+.stat b{display:block;font-family:var(--display);font-size:28px;font-weight:600;font-variant-numeric:tabular-nums}
+
+/* entry */
+.entry{display:flex;flex-direction:column;gap:10px}
+.entryhead{display:flex;justify-content:space-between;align-items:baseline;gap:8px;flex-wrap:wrap}
+.paper{background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:16px 18px}
+.prefix{font-family:var(--body);font-style:italic;font-size:22px;color:var(--muted)}
+textarea{width:100%;min-height:120px;resize:vertical;border:0;background:none;color:var(--ink);font-family:var(--body);font-size:20px;line-height:1.45;padding:0;margin-top:2px}
+textarea:focus{outline:none}
+.paper:focus-within{border-color:var(--accent)}
+.row{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+.core-toggle{display:inline-flex;align-items:center;gap:8px;border:1px solid var(--line);background:none;padding:8px 14px;border-radius:999px;font-size:14px}
+.core-toggle[aria-pressed="true"]{background:var(--gold-soft);border-color:var(--gold)}
+.core-toggle svg{width:16px;height:16px}
+.core-toggle[aria-pressed="true"] svg{fill:var(--gold);stroke:var(--gold)}
+input[type=text],input[type=number],select{font:inherit;color:var(--ink);background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:9px 12px;width:100%}
+.save{border:0;background:var(--accent);color:var(--accent-ink);padding:10px 20px;border-radius:999px;font-weight:600}
+.save:disabled{opacity:.35;cursor:not-allowed}
+.hint{font-size:13px;color:var(--muted)}
+.saved{font-size:13px;color:var(--accent)}
+.grow{flex:1;min-width:0}
+
+/* calendar */
+.calhead{display:flex;align-items:center;justify-content:space-between;gap:8px}
+.calhead h2{font-family:var(--display);font-weight:600;font-size:24px;margin:0}
+.grid{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:5px}
+.dow{font-size:11px;text-align:center;color:var(--muted);padding-bottom:4px;letter-spacing:.06em}
+.cell{aspect-ratio:1/1;border:1px solid transparent;background:var(--surface);border-radius:12px;padding:7px;display:flex;flex-direction:column;justify-content:space-between;align-items:flex-start;text-align:left;min-width:0;position:relative}
+.cell:not(.future):not(.blank):hover{border-color:var(--line)}
+.cell .d{font-size:14px;font-weight:600}
+.cell .n{font-family:var(--mono);font-size:10px;color:var(--muted)}
+.cell.has::after{content:"";position:absolute;top:9px;right:9px;width:7px;height:7px;border-radius:50%;background:var(--accent)}
+.cell.core{background:var(--gold-soft)}
+.cell.core::after{background:var(--gold);width:9px;height:9px}
+.cell.today{border-color:var(--accent)}
+.cell.sel{outline:2px solid var(--accent);outline-offset:1px}
+.cell.bday .n{color:var(--accent);font-weight:600}
+.cell.future{opacity:.35;cursor:default}
+.cell.blank{background:none}
+.legend{display:flex;gap:14px;flex-wrap:wrap;font-size:12px;color:var(--muted)}
+.legend i{display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:6px;vertical-align:middle}
+.detail h3{font-family:var(--display);font-size:20px;margin:0}
+.detail .read{font-family:var(--body);font-size:19px;line-height:1.5}
+.detail .read em{color:var(--muted)}
+.coreline{display:flex;align-items:center;gap:6px;color:var(--gold);font-weight:600;font-size:14px}
+.coreline svg{width:16px;height:16px;fill:currentColor;stroke:currentColor}
+
+/* core memories */
+.mem{display:grid;grid-template-columns:auto minmax(0,1fr);gap:4px 16px;padding:16px 0;border-top:1px solid var(--line)}
+.mem:first-child{border-top:0;padding-top:4px}
+.mem .day{font-family:var(--mono);font-size:12px;color:var(--gold);font-weight:600;padding-top:4px;white-space:nowrap}
+.mem h3{margin:0;font-family:var(--display);font-weight:600;font-size:18px;text-wrap:balance}
+.mem p{margin:0;grid-column:2;font-family:var(--body);font-size:17px}
+.mem .date{grid-column:2;font-size:12px;color:var(--muted)}
+.mem button{grid-column:2;justify-self:start;border:0;background:none;color:var(--accent);padding:0;font-size:13px}
+.yeargroup{display:flex;flex-direction:column;gap:10px}
+.yearhead{display:flex;align-items:baseline;gap:12px;flex-wrap:wrap;padding-bottom:8px;border-bottom:2px solid var(--accent)}
+.yearhead h2{margin:0;font-family:var(--display);font-weight:800;font-size:26px;letter-spacing:-.02em;color:var(--accent)}
+.yearhead .hint{flex:1;min-width:0}
+
+/* tags */
+.chips{display:flex;flex-wrap:wrap;gap:6px}
+.chip{border:1px solid var(--line);background:none;border-radius:999px;padding:5px 12px;font-size:13px;color:var(--muted)}
+.chip:hover{border-color:var(--muted)}
+.chip[aria-pressed="true"]{background:var(--wash);border-color:var(--accent);color:var(--ink)}
+.chip.static{cursor:default;padding:2px 10px;font-size:12px;background:var(--wash);border-color:transparent;color:var(--ink)}
+.chip .x{margin-left:6px;color:var(--muted)}
+.cal-dim .cell.has:not(.match),.cal-dim .cell:not(.has):not(.blank):not(.future){opacity:.28}
+.cell.match{border-color:var(--accent)}
+
+/* on this day */
+.otd{display:grid;gap:12px}
+.otd-item{display:grid;gap:4px;padding-top:12px;border-top:1px solid var(--line)}
+.otd-item:first-of-type{border-top:0;padding-top:0}
+.otd-item .when{font-size:12px;color:var(--muted)}
+.otd-item p{margin:0;font-family:var(--body);font-size:18px}
+.otd-item p em{color:var(--muted)}
+.next{font-size:12px;color:var(--muted);margin-top:8px}
+.next b{color:var(--ink);font-weight:600}
+.check{display:flex!important;grid-template-columns:none!important;align-items:center;gap:10px!important;color:var(--ink)!important;font-size:14px!important}
+.check input{width:18px;height:18px;accent-color:var(--accent)}
+input[type=time]{font:inherit;color:var(--ink);background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:6px 10px}
+
+/* time capsules */
+.capnew{display:grid;gap:12px}
+.capnew input[type=text]{border:0;border-bottom:1px solid var(--line);border-radius:0;padding:4px 0 8px;font-family:var(--display);font-size:18px;font-weight:600;background:none}
+.capnew input[type=text]:focus{outline:none;border-color:var(--accent)}
+.capnew textarea{min-height:140px}
+input[type=date]{font:inherit;color:var(--ink);background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:8px 10px;justify-self:start}
+.capgroup{display:flex;flex-direction:column;gap:10px}
+.cap{display:grid;gap:8px}
+.cap h3{margin:0;font-family:var(--display);font-weight:600;font-size:18px;text-wrap:balance}
+.cap .top{display:flex;align-items:center;gap:10px}
+.cap .top svg{width:18px;height:18px;flex:none;color:var(--muted)}
+.cap.sealed{background:var(--wash);border-color:transparent}
+.cap.ripe{background:var(--gold-soft);border-color:var(--gold)}
+.cap.ripe .top svg{color:var(--gold)}
+.cap .msg{font-family:var(--body);font-size:19px;line-height:1.5;white-space:pre-wrap;margin:0}
+.cap.reveal{animation:reveal .5s cubic-bezier(.2,.8,.2,1)}
+@keyframes reveal{from{clip-path:inset(0 50% 0 50% round 16px);opacity:.4}to{clip-path:inset(0 0 0 0 round 16px);opacity:1}}
+.linkbtn{border:0;background:none;padding:0;font-size:13px;color:var(--muted);text-decoration:underline;text-underline-offset:2px}
+.linkbtn.danger{color:#B4432F}
+.tabdot{display:inline-block;width:6px;height:6px;border-radius:50%;background:var(--gold);margin-left:6px;vertical-align:middle}
+
+/* last-day curtain */
+.curtain.lastday{background:
+  radial-gradient(90% 55% at 50% 115%,rgba(226,150,72,.38),transparent 70%),
+  radial-gradient(120% 90% at 50% 15%,#12291F 0%,#060E0A 75%)}
+.curtain.lastday .big{opacity:.22}
+.curtain.lastday.done .big{opacity:1}
+.summary{display:flex;gap:28px;flex-wrap:wrap;justify-content:center;max-width:640px}
+.summary div{display:grid;gap:2px}
+.summary b{font-family:var(--display);font-weight:600;font-size:30px;color:var(--mint);font-variant-numeric:tabular-nums}
+.summary span{font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--mint-dim)}
+
+/* words */
+.wfield{display:flex;flex-direction:column;justify-content:center;gap:2px;padding:34px 28px;min-height:220px}
+.wline{display:flex;flex-wrap:wrap;justify-content:center;align-items:baseline;gap:2px 16px}
+.wfield .w{border:0;background:none;color:var(--ink);font-family:var(--display);line-height:1.08;letter-spacing:-.02em;padding:0 3px;border-radius:6px;animation:wbloom .5s cubic-bezier(.2,.8,.2,1) both;transition:color .15s}
+.wfield .w:hover{color:var(--accent)}
+.wfield .w.top{color:var(--accent)}
+.wfield .w.dim{color:var(--muted)}
+.wfield .w.cls{font-family:var(--mono);letter-spacing:0;background:var(--wash);padding:.06em .4em}
+.wfield .w[aria-pressed="true"]{outline:2px solid var(--accent);outline-offset:2px}
+@keyframes wbloom{from{opacity:0;transform:scale(.82)}to{opacity:1;transform:none}}
+.wrow{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:6px 12px;align-items:baseline;width:100%;text-align:left;border:1px solid transparent;background:none;border-radius:12px;padding:8px 10px}
+.wrow:hover{background:var(--wash)}
+.wrow[aria-pressed="true"]{background:var(--wash);border-color:var(--accent)}
+.wrow .name{font-size:14px;font-weight:600;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.wrow .cnt{font-family:var(--mono);font-size:11px;color:var(--muted)}
+.wrow .bar{grid-column:1/-1;display:block;height:6px}
+.wrow:hover .bar,.wrow[aria-pressed="true"] .bar{background:var(--surface)}
+.clsname{font-family:var(--mono);letter-spacing:0}
+.wdetail{display:grid;gap:12px}
+.wdh{font-family:var(--display);font-weight:800;font-size:26px;letter-spacing:-.02em;margin:0;color:var(--accent)}
+.wdh.clsname{font-family:var(--mono);font-weight:600;font-size:20px}
+.wdetail .when{text-decoration:none;font-size:12px}
+mark{background:var(--wash);color:var(--ink);border-bottom:2px solid var(--accent);padding:0 1px;border-radius:2px}
+.suggest{display:grid;gap:10px;background:var(--wash);border-color:transparent}
+.suggest p{margin:0;font-size:14px}
+.clschip{font-family:var(--mono);font-size:12px}
+
+/* birthday curtain: dawn instead of dusk */
+.curtain.birthday{background:
+  radial-gradient(80% 55% at 50% -10%,rgba(240,214,140,.34),transparent 70%),
+  radial-gradient(60% 40% at 50% 0%,rgba(150,220,180,.18),transparent 70%),
+  radial-gradient(120% 90% at 50% 25%,#1B4634 0%,#0D241A 75%)}
+.curtain .big.out{opacity:0!important;transform:scale(1.18);filter:blur(14px);transition:opacity .9s ease,transform .9s ease,filter .9s ease}
+.curtain .big.in{animation:dayzero 1.1s cubic-bezier(.2,.8,.2,1) both}
+@keyframes dayzero{from{opacity:0;transform:scale(.8)}to{opacity:1;transform:none}}
+.segs i.drain{background:rgba(228,242,232,.14)!important;transition:background .35s}
+
+/* milestone curtain */
+.curtain.milestone{background:
+  radial-gradient(70% 55% at 50% 0%,rgba(224,187,85,.22),transparent 70%),
+  radial-gradient(120% 90% at 50% 20%,var(--forest) 0%,var(--forest-deep) 70%)}
+.curtain .eyebrow{font-family:var(--display);font-weight:600;font-size:15px;letter-spacing:.12em;text-transform:uppercase;color:#E0BB55}
+.segs{display:grid;grid-template-columns:repeat(20,1fr);gap:5px;width:min(520px,80vw)}
+.segs i{height:10px;border-radius:3px;background:rgba(228,242,232,.14);transition:background .5s}
+.segs i.on{background:var(--mint-dim)}
+.segs i.new{background:rgba(224,187,85,.35)}
+.curtain.done .segs i.new{background:#E0BB55}
+.segs-label{display:flex;justify-content:space-between;width:min(520px,80vw);font-family:var(--mono);font-size:11px;color:var(--mint-dim);margin-top:-18px}
+.empty{padding:28px 18px;text-align:center;color:var(--muted)}
+.empty b{display:block;font-family:var(--display);color:var(--ink);font-size:18px;margin-bottom:4px}
+
+.settings{display:grid;gap:14px}
+.settings label{display:grid;gap:6px;font-size:13px;color:var(--muted)}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+
+/* the new-day curtain: one fixed look in both themes */
+.curtain{position:fixed;inset:0;z-index:50;background:radial-gradient(120% 90% at 50% 20%,var(--forest) 0%,var(--forest-deep) 70%);color:var(--mint);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:28px;padding:40px 24px;text-align:center;-webkit-app-region:drag;transition:opacity .6s ease, transform .6s ease}
+.curtain.leaving{opacity:0;transform:scale(1.02);pointer-events:none}
+.curtain .date{font-family:var(--ui);font-size:14px;letter-spacing:.14em;text-transform:uppercase;color:var(--mint-dim)}
+.curtain .big{font-family:var(--display);font-weight:800;font-size:clamp(140px,30vw,340px);line-height:.85;letter-spacing:-.05em;font-variant-numeric:tabular-nums;color:var(--mint);opacity:.28;transition:opacity .5s}
+.curtain.done .big{opacity:1}
+.curtain .note{font-family:var(--body);font-size:22px;color:var(--mint-dim);min-height:1.5em;max-width:34ch}
+.curtain.done .note{color:var(--mint)}
+.curtain button,#cContinue{-webkit-app-region:no-drag;border:1px solid rgba(228,242,232,.35);background:rgba(228,242,232,.08);color:var(--mint);font-family:var(--display);font-weight:600;font-size:26px;padding:18px 34px;border-radius:999px;transition:background .2s,transform .12s}
+.curtain button:hover{background:rgba(228,242,232,.16)}
+.curtain button:active{transform:scale(.97)}
+.curtain button:focus-visible{outline:2px solid var(--mint);outline-offset:4px}
+.curtain .keys{font-size:12px;color:var(--mint-dim)}
+@media (prefers-reduced-motion: reduce){*{transition:none!important;animation:none!important}}
+</style>
+</head>
+<body>
+<div class="titlebar"></div>
+
+<div class="curtain" id="curtain" hidden role="dialog" aria-modal="true" aria-labelledby="newDayBtn">
+  <div class="eyebrow" id="cEyebrow" hidden></div>
+  <div class="date" id="cDate"></div>
+  <div class="big" id="cNum">0</div>
+  <div class="segs" id="cSegs" hidden></div>
+  <div class="segs-label" id="cSegsLabel" hidden><span id="cSegL"></span><span id="cSegR"></span></div>
+  <div class="note" id="cNote"></div>
+  <button id="newDayBtn">It's a new day.</button>
+  <div class="summary" id="cSummary" hidden></div>
+  <button id="cContinue" hidden>Begin the last day.</button>
+  <div class="keys" id="cKeys">Press Return</div>
+</div>
+
+<div class="wrap">
+  <header>
+    <div class="brand"><span class="mark">29</span>Day by Day</div>
+    <nav role="tablist" aria-label="Views">
+      <button role="tab" data-tab="today" aria-selected="true">Today</button>
+      <button role="tab" data-tab="calendar" aria-selected="false">Calendar</button>
+      <button role="tab" data-tab="core" aria-selected="false">Core memories</button>
+      <button role="tab" data-tab="capsules" aria-selected="false" id="tabCaps">Capsules</button>
+      <button role="tab" data-tab="words" aria-selected="false">Words</button>
+      <button role="tab" data-tab="settings" aria-selected="false">Settings</button>
+    </nav>
+  </header>
+
+  <section id="v-today" class="view">
+    <div class="counter">
+      <div class="label" id="counterLabel">Days since your birthday</div>
+      <div class="num" id="bigNum">0</div>
+      <div class="sub" id="counterSub"></div>
+      <div>
+        <div class="bar"><i id="barFill" style="width:0"></i></div>
+        <div class="barlabels"><span id="barL"></span><span id="barR"></span></div>
+        <div class="next" id="nextMilestone"></div>
+      </div>
+      <div class="status">
+        <span class="label">Discord status</span>
+        <code id="statusText"></code>
+        <button class="ghost" id="copyStatus">Copy</button>
+      </div>
+    </div>
+    <div class="stats">
+      <div class="stat"><span class="label">Days logged</span><b id="sLogged">0</b></div>
+      <div class="stat"><span class="label">Streak</span><b id="sStreak">0</b></div>
+      <div class="stat"><span class="label">Core memories</span><b id="sCore">0</b></div>
+    </div>
+    <div class="entry" id="todayEntry"></div>
+    <div class="paper otd">
+      <div class="row"><span class="label grow">On this day</span><button class="ghost" id="randomBtn">Random day</button></div>
+      <div id="otdList"></div>
+    </div>
+  </section>
+
+  <section id="v-calendar" class="view" hidden>
+    <div class="calhead">
+      <button class="ghost" id="prevM" aria-label="Previous month">←</button>
+      <h2 id="monthTitle"></h2>
+      <button class="ghost" id="nextM" aria-label="Next month">→</button>
+    </div>
+    <div class="row"><span class="label">Show</span><div class="chips grow" id="calFilter"></div><button class="ghost" id="randomBtn2">Random day</button></div>
+    <div class="grid" id="calGrid"></div>
+    <div class="legend"><span><i style="background:var(--accent)"></i>Entry written</span><span><i style="background:var(--gold)"></i>Core memory</span><span>Small number = day count</span></div>
+    <div class="detail" id="calDetail"></div>
+  </section>
+
+  <section id="v-core" class="view" hidden>
+    <div>
+      <div class="label">Core memories</div>
+      <p class="hint" style="margin:4px 0 0">Days you starred, newest first, grouped by birthday year.</p>
+    </div>
+    <div id="coreList" class="view"></div>
+  </section>
+
+  <section id="v-capsules" class="view" hidden>
+    <div>
+      <div class="label">Time capsules</div>
+      <p class="hint" style="margin:4px 0 0">Write something now and seal it. You can't read it again until the day it opens.</p>
+    </div>
+    <div class="paper capnew">
+      <input type="text" id="capTitle" placeholder="Name it (optional)" maxlength="80">
+      <textarea id="capText" aria-label="Capsule message" placeholder="Dear future me…"></textarea>
+      <div class="label">Opens</div>
+      <div class="chips" id="capWhen"></div>
+      <input type="date" id="capDate" hidden>
+      <div class="row"><button class="save" id="capSeal" disabled>Seal capsule</button><span class="hint grow" id="capHint"></span></div>
+    </div>
+    <div id="capLists" class="view"></div>
+  </section>
+
+  <section id="v-words" class="view" hidden>
+    <div class="row"><div class="chips grow" id="wPeriod"></div></div>
+    <div class="calhead">
+      <button class="ghost" id="wPrev" aria-label="Earlier">←</button>
+      <h2 id="wTitle"></h2>
+      <button class="ghost" id="wNext" aria-label="Later">→</button>
+    </div>
+    <p class="hint" id="wMeta" style="margin:-12px 0 0;text-align:center"></p>
+    <div id="wSuggest"></div>
+    <div class="paper wfield" id="wField"></div>
+    <div class="paper detail wdetail" id="wDetail" hidden></div>
+    <div class="paper" id="wRankBox" hidden><div class="label" style="margin-bottom:6px">Most mentioned</div><div id="wRank"></div></div>
+    <p class="hint" style="margin:0">Sized by how many days you mentioned each word. Little words like “I” and “the” are left out, and forms like slept, sleep and sleeping count as one. Classes like PSYCH 30 count as one word. Click any word to see the days it came from.</p>
+  </section>
+
+  <section id="v-settings" class="view" hidden>
+    <div class="paper settings">
+      <div class="label">Settings</div>
+      <div class="two">
+        <label>Birthday month<select id="setMonth"></select></label>
+        <label>Birthday day<input type="number" id="setDay" min="1" max="31"></label>
+      </div>
+      <label>Birth year (optional; adds your age and a days-alive mode)<input type="number" id="setYear" min="1900" max="2100" placeholder="e.g. 2005"></label>
+      <label>What to count
+        <select id="setMode">
+          <option value="birthday">Days since my last birthday (resets each year)</option>
+          <option value="birth">Days since I was born</option>
+        </select>
+      </label>
+      <label>Discord status format ({n} is the number)<input type="text" id="setFmt" placeholder="day {n}"></label>
+      <div class="row"><button class="save" id="saveSettings">Save settings</button><span class="saved" id="setSaved"></span></div>
+    </div>
+    <div class="paper settings">
+      <div class="label">Tags</div>
+      <div class="chips" id="tagManager"></div>
+      <div class="row"><input type="text" id="newTag" class="grow" style="width:auto" placeholder="Add a tag" maxlength="30"><button class="ghost" id="addTag">Add</button></div>
+      <p class="hint" style="margin:0">Tags are always listed A–Z. Removing one here keeps it on days you've already tagged.</p>
+    </div>
+    <div class="paper settings">
+      <div class="label">Words</div>
+      <div style="display:grid;gap:8px"><span class="hint">Classes, each counted as one word. Remove any that aren't classes.</span><div class="chips" id="wsClasses"></div></div>
+      <div class="row"><input type="text" id="wsNewClass" class="grow" style="width:auto" placeholder="Add a class, like CS 106B" maxlength="16"><button class="ghost" id="wsAddClass">Add</button></div>
+      <span class="hint" id="wsClassHint" style="color:var(--accent)"></span>
+      <div style="display:grid;gap:8px"><span class="hint">Counted together</span><div class="chips" id="wsAliases"></div></div>
+      <div style="display:grid;gap:8px"><span class="hint">Hidden from Words</span><div class="chips" id="wsHidden"></div></div>
+    </div>
+    <div class="paper settings">
+      <div class="label">Reminder and startup</div>
+      <div class="row">
+        <label class="check"><input type="checkbox" id="setReminder"> Remind me if I haven't written by</label>
+        <input type="time" id="setReminderTime" value="22:00">
+        <button class="ghost" id="testReminder">Send a test</button>
+      </div>
+      <p class="hint" style="margin:0">The reminder works while the app is running. Closing the window keeps it running in the menu bar (the 29 icon at the top of your screen); ⌘Q quits it.</p>
+      <label class="check"><input type="checkbox" id="setHideDock"> Hide from the Dock when the window is closed (stays in the menu bar)</label>
+      <label class="check"><input type="checkbox" id="setTrayCount"> Show the day count next to the menu bar icon</label>
+      <label class="check"><input type="checkbox" id="setLogin"> Open Day by Day when I log in</label>
+      <p class="hint" style="margin:0" id="loginHint"></p>
+    </div>
+    <div class="paper settings">
+      <div class="label">Your data</div>
+      <p class="hint" style="margin:0">Everything lives in one file on this Mac, with a daily backup beside it.</p>
+      <div class="row">
+        <button class="ghost" id="reveal">Show data file in Finder</button>
+        <button class="ghost" id="exportMd">Export as Markdown</button>
+        <button class="ghost" id="exportJson">Export full backup (JSON)</button>
+      </div>
+      <span class="saved" id="exportMsg"></span>
+    </div>
+  </section>
+</div>
+
+<script>
+(() => {
+const MONTHS=["January","February","March","April","May","June","July","August","September","October","November","December"];
+const MON=MONTHS.map(m=>m.slice(0,3));
+const WEEK=["Sunday","Monday","Tuesday","Wednesday","Thursday","Friday","Saturday"];
+const pad=n=>String(n).padStart(2,"0");
+const keyOf=(y,m,d)=>`${y}-${pad(m)}-${pad(d)}`;
+const parseKey=k=>k.split("-").map(Number);
+const dn=(y,m,d)=>Math.floor(Date.UTC(y,m-1,d)/864e5);
+const fromDn=n=>{const t=new Date(n*864e5);return keyOf(t.getUTCFullYear(),t.getUTCMonth()+1,t.getUTCDate())};
+const todayKey=()=>{const t=new Date();return keyOf(t.getFullYear(),t.getMonth()+1,t.getDate())};
+const kdn=k=>{const[y,m,d]=parseKey(k);return dn(y,m,d)};
+const fmtDate=k=>{const[y,m,d]=parseKey(k);return `${MON[m-1]} ${d}, ${y}`};
+const longDate=k=>{const[y,m,d]=parseKey(k);return `${WEEK[new Date(y,m-1,d).getDay()]}, ${MONTHS[m-1]} ${d}`};
+const $=id=>document.getElementById(id);
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const reduced=()=>matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+const DEFAULT_TAGS=["Assessment","Event","Exercise","Socializing","Studying"];
+let settings={bMonth:12,bDay:29,birthYear:null,mode:"birthday",fmt:"day {n}",tags:DEFAULT_TAGS.slice(),reminder:true,reminderTime:"22:00",openAtLogin:true};
+let days={};
+let capsules={};
+let viewMonth=null, selKey=null, curtainUp=false, calTag=null;
+
+/* day math */
+function lastBirthday(k){const[y,m,d]=parseKey(k);const by=(m>settings.bMonth||(m===settings.bMonth&&d>=settings.bDay))?y:y-1;return [by,dn(by,settings.bMonth,settings.bDay)]}
+const birthMode=()=>settings.mode==="birth"&&!!settings.birthYear;
+function countFor(k){return birthMode()?kdn(k)-dn(settings.birthYear,settings.bMonth,settings.bDay):kdn(k)-lastBirthday(k)[1]}
+function cycle(k){const[by,start]=lastBirthday(k);const end=dn(by+1,settings.bMonth,settings.bDay);return{by,start,end,len:end-start,left:end-kdn(k)}}
+const statusFor=n=>(settings.fmt||"day {n}").replace(/\{n\}/g,n);
+const bdayName=()=>`${MON[settings.bMonth-1]} ${settings.bDay}`;
+/* milestones: every 5% of the birthday year */
+const pctOf=k=>{const c=cycle(k);return (kdn(k)-c.start)/c.len*100};
+const stepOf=k=>Math.floor(pctOf(k)/5+1e-9);
+function milestoneFor(k){const prev=fromDn(kdn(k)-1);const s=stepOf(k);if(s<1||kdn(k)===cycle(k).start)return null;return stepOf(prev)<s||cycle(prev).start!==cycle(k).start?s*5:null}
+function nextMilestone(k){let t=kdn(k)+1;const c=cycle(k);for(;t<c.end;t++){const m=milestoneFor(fromDn(t));if(m)return{k:fromDn(t),pct:m}}return null}
+function milestoneLine(p){
+  const b=bdayName();
+  if(p===25)return `A quarter of the way to ${b}.`;
+  if(p===50)return `Halfway to ${b}.`;
+  if(p===75)return `Three quarters of the way to ${b}.`;
+  if(p===95)return `The last stretch before ${b}.`;
+  return `${p}% of the way to ${b}.`;
+}
+
+/* tags */
+const sortTags=a=>[...new Set(a.map(t=>t.trim()).filter(Boolean))].sort((x,y)=>x.localeCompare(y,undefined,{sensitivity:"base"}));
+const tagsOf=k=>sortTags(days[k]?.tags||[]);
+const allTags=()=>sortTags([...(settings.tags||[]),...Object.keys(days).flatMap(k=>days[k].tags||[])]);
+const chipsStatic=list=>list.length?`<div class="chips">${list.map(t=>`<span class="chip static">${esc(t)}</span>`).join("")}</div>`:"";
+
+/* storage: one JSON file via the app; browser storage only if opened outside the app */
+const api=window.dbd||null;
+let saveTimer=null;
+function persist(){
+  clearTimeout(saveTimer);
+  saveTimer=setTimeout(()=>{
+    const data={version:3,settings,days,capsules};
+    if(api) api.save(data).catch(()=>{});
+    else { try{localStorage.setItem("daybyday",JSON.stringify(data))}catch(e){} }
+  },150);
+}
+async function load(){
+  let d={};
+  if(api){try{d=await api.load()||{}}catch(e){}}
+  else{try{d=JSON.parse(localStorage.getItem("daybyday")||"{}")}catch(e){}}
+  if(d.settings)settings={...settings,...d.settings};
+  if(!Array.isArray(settings.tags))settings.tags=DEFAULT_TAGS.slice();
+  settings.tags=sortTags(settings.tags);
+  if(d.days)days=d.days;
+  if(d.capsules)capsules=d.capsules;
+}
+const ui={get(k,f){try{return localStorage.getItem("dbd:"+k)??f}catch(e){return f}},set(k,v){try{localStorage.setItem("dbd:"+k,v)}catch(e){}},del(k){try{localStorage.removeItem("dbd:"+k)}catch(e){}}};
+
+/* derived */
+const hasEntry=k=>!!(days[k]&&days[k].text&&days[k].text.trim());
+const isCore=k=>hasEntry(k)&&!!days[k].core;
+function streak(){let t=kdn(todayKey());if(!hasEntry(fromDn(t)))t--;let s=0;while(hasEntry(fromDn(t))){s++;t--}return s}
+function lastAcked(){const tk=todayKey();const ks=Object.keys(days).filter(k=>days[k].acked&&k<tk).sort();return ks.length?ks[ks.length-1]:null}
+const validText=t=>t.trim().split(/\s+/).filter(Boolean).length>=2;
+
+function animateTo(el,from,to,dur=900){
+  if(reduced()||from==null||from>=to){el.textContent=to;return}
+  const t0=performance.now();
+  const step=t=>{const p=Math.min(1,(t-t0)/dur),e=1-Math.pow(1-p,3);el.textContent=Math.round(from+(to-from)*e);if(p<1)requestAnimationFrame(step)};
+  requestAnimationFrame(step);
+}
+
+/* ---------- the new-day curtain ---------- */
+const isLastDay=k=>kdn(k)===cycle(k).end-1;
+const isBirthday=k=>kdn(k)===cycle(k).start;
+let curtainMode="normal";
+function checkDay(){
+  const k=todayKey();
+  if(days[k]?.acked){ if(!curtainUp){ $("todayEntry").dataset.built!==k && renderToday(); } return; }
+  if(curtainUp){ if(api&&api.presentNewDay) api.presentNewDay(); return; }
+  curtainUp=true;
+  const n=countFor(k), la=lastAcked(), last=isLastDay(k), bday=isBirthday(k), ms=(last||bday)?null:milestoneFor(k);
+  curtainMode=bday?"birthday":last?"last":ms?"milestone":"normal";
+  const prev=la?countFor(la):Math.max(0,n-1);
+  const c=$("curtain");
+  c.classList.remove("done","leaving","milestone","lastday","birthday");
+  $("cNum").classList.remove("out","in");
+  if(ms)c.classList.add("milestone");
+  if(last)c.classList.add("lastday");
+  if(bday)c.classList.add("birthday");
+  const special=!!(ms||last||bday);
+  $("cEyebrow").hidden=!special;
+  $("cSegs").hidden=!special;$("cSegsLabel").hidden=!special;
+  $("cSummary").hidden=true;$("cContinue").hidden=true;
+  if(special){
+    $("cEyebrow").textContent=bday?bdayName():last?"The last day":`Milestone · ${ms}%`;
+    const on=(last||bday)?(bday?21:20):ms/5;
+    $("cSegs").innerHTML=Array.from({length:20},(_,i)=>`<i class="${i<on-1?"on":i===on-1?"new":""}"></i>`).join("");
+    $("cSegL").textContent=bdayName();$("cSegR").textContent=bdayName();
+  }
+  $("cDate").textContent=longDate(k);
+  $("cNum").textContent=prev;
+  const gap=la?kdn(k)-kdn(la):null;
+  $("cNote").textContent=bday?(la?`Yesterday was day ${prev}. The last day of the year.`:"A new year starts today.")
+    :last?`Tomorrow is ${bdayName()}. The count goes back to 0.`
+    :!la?"Your count starts today.":gap===1?`Yesterday was day ${prev}.`:`It's been ${gap} days since you last checked in.`;
+  $("newDayBtn").hidden=false;$("cKeys").hidden=false;
+  c.hidden=false;
+  syncTray(); // tells the app a new day is pending before it comes forward
+  if(api) (api.presentNewDay?api.presentNewDay():api.fullscreen(true));
+}
+function yearSummary(k){
+  const c=cycle(k);
+  const ks=Object.keys(days).filter(x=>hasEntry(x)&&kdn(x)>=c.start&&kdn(x)<c.end);
+  const core=ks.filter(isCore).length;
+  const counts={};for(const x of ks)for(const t of days[x].tags||[])counts[t]=(counts[t]||0)+1;
+  const top=Object.entries(counts).sort((a,b)=>b[1]-a[1]||a[0].localeCompare(b[0]))[0];
+  const stat=(v,l)=>`<div><b>${v}</b><span>${l}</span></div>`;
+  return stat(c.len,"days in this year")+stat(ks.length,ks.length===1?"day written":"days written")+stat(core,core===1?"core memory":"core memories")+(top?stat(esc(top[0]),"most-used tag"):"");
+}
+function dismissCurtain(){
+  const cur=$("curtain");
+  cur.classList.add("leaving");
+  if(api) api.fullscreen(false);
+  const ready=ripeCapsules().length>0;
+  setTimeout(()=>{cur.hidden=true;curtainUp=false;setTab(ready?"capsules":"today");if(!ready)$("t-text")?.focus()},reduced()?0:600);
+}
+function acknowledge(){
+  const k=todayKey();if(days[k]?.acked)return;
+  const n=countFor(k),c=cycle(k),bday=isBirthday(k),last=isLastDay(k),ms=(last||bday)?null:milestoneFor(k);
+  days[k]={...(days[k]||{}),acked:true,n};
+  persist();
+  const cur=$("curtain");
+  $("newDayBtn").hidden=true;$("cKeys").hidden=true;
+  cur.classList.add("done");
+  if(bday&&!birthMode()){
+    // the old year's number fades away and day 0 arrives in its place
+    const num=$("cNum");num.classList.add("out");
+    [...$("cSegs").children].reverse().forEach((seg,i)=>setTimeout(()=>seg.className="drain",reduced()?0:i*35));
+    setTimeout(()=>{num.textContent="0";num.classList.remove("out");num.classList.add("in")},reduced()?0:950);
+  }else animateTo($("cNum"),Number($("cNum").textContent),n,last?1600:1100);
+  const ripe=ripeCapsules().length;
+  const capLine=ripe?` ${ripe===1?"A time capsule is":`${ripe} time capsules are`} ready to open.`:"";
+  const age=settings.birthYear?c.by-settings.birthYear:null;
+  $("cNote").textContent=(bday?`Happy birthday${age!=null?`. You're ${age} today`:""}. Day 0 of a new year.`
+    :last?`Day ${n}. The last day of this year.`
+    :ms?`Day ${n}. ${milestoneLine(ms)}`
+    :`Day ${n}. ${c.left} day${c.left===1?"":"s"} until ${bdayName()}.`)+capLine;
+  renderToday();
+  if(last){
+    // the last day doesn't fade on its own: show the year, then wait for you
+    setTimeout(()=>{$("cSummary").innerHTML=yearSummary(k);$("cSummary").hidden=false;$("cContinue").textContent="Begin the last day.";$("cContinue").hidden=false;$("cKeys").hidden=false},reduced()?0:1700);
+    return;
+  }
+  if(bday){
+    // neither does the birthday: let day 0 sink in, then wait for you
+    setTimeout(()=>{$("cContinue").textContent="Begin the new year.";$("cContinue").hidden=false;$("cKeys").hidden=false},reduced()?0:2300);
+    return;
+  }
+  setTimeout(dismissCurtain,reduced()?1200:(ms||ripe?3200:2200));
+}
+$("newDayBtn").onclick=acknowledge;
+$("cContinue").onclick=dismissCurtain;
+document.addEventListener("keydown",e=>{
+  if(!curtainUp||!(e.key==="Enter"||e.key===" "))return;
+  if(!$("newDayBtn").hidden){e.preventDefault();acknowledge()}
+  else if(!$("cContinue").hidden){e.preventDefault();dismissCurtain()}
+});
+
+/* ---------- tabs ---------- */
+function setTab(t){
+  for(const b of document.querySelectorAll("nav button"))b.setAttribute("aria-selected",String(b.dataset.tab===t));
+  for(const v of ["today","calendar","core","capsules","words","settings"])$("v-"+v).hidden=v!==t;
+  if(t==="calendar")renderCal();if(t==="capsules")renderCapsules();if(t==="words")renderWords();if(t==="core")renderCore();if(t==="settings")renderSettings();
+  ui.set("tab",t);
+}
+document.querySelectorAll("nav button").forEach(b=>b.onclick=()=>setTab(b.dataset.tab));
+
+/* ---------- today ---------- */
+function renderToday(){
+  const k=todayKey(),n=countFor(k),c=cycle(k);
+  $("counterLabel").textContent=birthMode()?"Days since you were born":"Days since your birthday";
+  $("bigNum").textContent=n;
+  const age=settings.birthYear?c.by-settings.birthYear:null;
+  const pct=Math.round(pctOf(k));
+  $("counterSub").textContent=(kdn(k)===c.start&&!birthMode())
+    ? "Happy birthday. A new year of days starts today."
+    : `${fmtDate(k)} · ${c.left} day${c.left===1?"":"s"} until ${bdayName()}`+(age!=null?` · ${pct}% of the way through ${age}`:"");
+  $("barFill").style.width=pctOf(k).toFixed(1)+"%";
+  $("barL").textContent=`${bdayName()}, ${c.by}`;
+  $("barR").textContent=`${bdayName()}, ${c.by+1}`;
+  const nm=nextMilestone(k), ms=milestoneFor(k);
+  $("nextMilestone").innerHTML=(ms?`Today: <b>${ms}% milestone</b>. `:"")+(nm?`Next milestone: <b>${nm.pct}%</b> on ${fmtDate(nm.k)}, in ${kdn(nm.k)-kdn(k)} day${kdn(nm.k)-kdn(k)===1?"":"s"}.`:`Next up: ${bdayName()}.`);
+  $("statusText").textContent=statusFor(n);
+  $("sLogged").textContent=Object.keys(days).filter(hasEntry).length;
+  $("sStreak").textContent=streak();
+  $("sCore").textContent=Object.keys(days).filter(isCore).length;
+  const host=$("todayEntry");
+  if(host.dataset.built!==k)buildEditor(host,k,true);
+  renderOTD();
+  renderCapBadge();
+  syncTray();
+}
+function syncTray(){
+  if(!api||!api.updateTray)return;
+  const k=todayKey(),c=cycle(k),nm=nextMilestone(k);
+  const line=(kdn(k)===c.start&&!birthMode())?"Happy birthday.":`${c.left} day${c.left===1?"":"s"} until ${bdayName()}`+(nm?` · ${nm.pct}% on ${MON[parseKey(nm.k)[1]-1]} ${parseKey(nm.k)[2]}`:"");
+  const la=lastAcked(),n=countFor(k);
+  const short=(kdn(k)===c.start&&!birthMode())?"Happy birthday.":`${c.left} day${c.left===1?"":"s"} until ${bdayName()}`;
+  const alive=settings.birthYear?kdn(k)-dn(settings.birthYear,settings.bMonth,settings.bDay):null;
+  const sinceBday=kdn(k)-c.start;
+  api.updateTray({count:n,prev:la?countFor(la):Math.max(0,n-1),short,line,pending:!days[k]?.acked,wrote:hasEntry(k),alive,sinceBday,birthMode:birthMode(),pct:Math.floor(pctOf(k)),caps:ripeCapsules().length}).catch(()=>{});
+}
+function copy(text,btn,srcEl){
+  const done=()=>{const o=btn.textContent;btn.textContent="Copied";setTimeout(()=>btn.textContent=o,1400)};
+  const fallback=()=>{const r=document.createRange();r.selectNodeContents(srcEl);const s=getSelection();s.removeAllRanges();s.addRange(r);btn.textContent="Selected, press ⌘C"};
+  try{navigator.clipboard.writeText(text).then(done,fallback)}catch(e){fallback()}
+}
+$("copyStatus").onclick=e=>copy($("statusText").textContent,e.currentTarget,$("statusText"));
+
+/* ---------- on this day + random day ---------- */
+function renderOTD(){
+  const k=todayKey(),[y,m,d]=parseKey(k);
+  const past=Object.keys(days).filter(x=>{const[py,pm,pd]=parseKey(x);return py<y&&pm===m&&pd===d&&hasEntry(x)}).sort().reverse();
+  $("otdList").innerHTML=past.length?past.map(x=>{const yrs=y-parseKey(x)[0];const e=days[x];return `<div class="otd-item">
+      <span class="when">${yrs} year${yrs===1?"":"s"} ago · ${fmtDate(x)} · day ${countFor(x)}${e.core?" · ★ core memory":""}</span>
+      <p><em>Today I</em> ${esc(e.text)}</p>${chipsStatic(tagsOf(x))}</div>`}).join("")
+    :`<p class="hint" style="margin:0">Nothing from ${MONTHS[m-1]} ${d} in earlier years yet. Next year, today's entry shows up here.</p>`;
+  const any=Object.keys(days).some(x=>x!==k&&hasEntry(x));
+  $("randomBtn").disabled=$("randomBtn2").disabled=!any;
+  $("randomBtn").title=$("randomBtn2").title=any?"Open a random past entry":"Write a few entries first";
+}
+function randomDay(){
+  const tk=todayKey();const ks=Object.keys(days).filter(x=>x!==tk&&hasEntry(x));
+  if(!ks.length)return;
+  let pick=ks[Math.floor(Math.random()*ks.length)];
+  if(ks.length>1&&pick===selKey)pick=ks.find(x=>x!==selKey);
+  selKey=pick;const[y,m]=parseKey(pick);viewMonth=[y,m];calTag=null;setTab("calendar");
+  $("calDetail").scrollIntoView({behavior:reduced()?"auto":"smooth",block:"nearest"});
+}
+$("randomBtn").onclick=randomDay;$("randomBtn2").onclick=randomDay;
+
+/* ---------- entry editor ---------- */
+const STAR='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round" aria-hidden="true"><path d="M12 3l2.7 5.6 6.1.9-4.4 4.3 1 6.1L12 17l-5.4 2.9 1-6.1-4.4-4.3 6.1-.9z"/></svg>';
+function buildEditor(host,k,isToday){
+  host.dataset.built=k;
+  const d=days[k]||{};const id=isToday?"t":"c";
+  const draft=isToday?ui.get("draft:"+k,null):null;
+  const chosen=new Set(d.tags||[]);
+  const tagList=sortTags([...(settings.tags||[]),...chosen]);
+  host.innerHTML=`
+    <div class="entryhead"><span class="label">${isToday?"Today":esc(fmtDate(k))} · day ${countFor(k)}</span><span class="hint" id="${id}-req"></span></div>
+    <div class="paper"><div class="prefix">Today I…</div><textarea id="${id}-text" aria-label="Today I"></textarea></div>
+    <div class="chips" id="${id}-tags">${tagList.map(t=>`<button class="chip" data-tag="${esc(t)}" aria-pressed="${chosen.has(t)}">${esc(t)}</button>`).join("")}</div>
+    <div class="row">
+      <button class="core-toggle" id="${id}-core" aria-pressed="${!!d.core}">${STAR}<span>Core memory</span></button>
+      <div class="grow" id="${id}-titlewrap" ${d.core?"":"hidden"}><input type="text" id="${id}-title" placeholder="Give it a name" maxlength="80"></div>
+    </div>
+    <div class="row"><button class="save" id="${id}-save">Save entry</button><span class="saved" id="${id}-saved"></span><span class="hint">⌘↩ to save</span></div>`;
+  const ta=$(id+"-text"),ct=$(id+"-core"),tt=$(id+"-title"),sv=$(id+"-save");
+  ta.placeholder=isToday?"…write at least one sentence about the main thing that happened.":"…what happened this day?";
+  ta.value=draft??(d.text||"");tt.value=d.coreTitle||"";
+  const check=()=>{const ok=validText(ta.value);sv.disabled=!ok;$(id+"-req").textContent=ok?(hasEntry(k)?"Saved entry · edit freely":"Ready to save"):"At least one sentence"};
+  ta.oninput=()=>{check();$(id+"-saved").textContent="";if(isToday)ui.set("draft:"+k,ta.value)};
+  ta.onkeydown=e=>{if(e.key==="Enter"&&(e.metaKey||e.ctrlKey)){e.preventDefault();sv.click()}};
+  $(id+"-tags").querySelectorAll(".chip").forEach(b=>b.onclick=()=>{b.setAttribute("aria-pressed",String(b.getAttribute("aria-pressed")!=="true"));$(id+"-saved").textContent=hasEntry(k)?"Unsaved changes":""});
+  ct.onclick=()=>{const on=ct.getAttribute("aria-pressed")!=="true";ct.setAttribute("aria-pressed",String(on));$(id+"-titlewrap").hidden=!on;if(on)tt.focus()};
+  sv.onclick=()=>{
+    if(!validText(ta.value))return;
+    const core=ct.getAttribute("aria-pressed")==="true";
+    const tags=sortTags([...$(id+"-tags").querySelectorAll('.chip[aria-pressed="true"]')].map(b=>b.dataset.tag));
+    days[k]={...(days[k]||{}),text:ta.value.trim(),tags,core,coreTitle:core?tt.value.trim():"",n:countFor(k),updatedAt:Date.now()};
+    if(isToday)ui.del("draft:"+k);
+    persist();
+    if(isToday){renderToday();$(id+"-saved").textContent=core?"Saved as a core memory":"Saved";check()}
+    else{if(k===todayKey())$("todayEntry").dataset.built="";renderToday();renderCal()}
+  };
+  check();
+}
+
+/* ---------- calendar ---------- */
+function renderFilter(){
+  const tags=allTags();
+  if(calTag&&!tags.includes(calTag))calTag=null;
+  $("calFilter").innerHTML=`<button class="chip" data-tag="" aria-pressed="${!calTag}">All days</button>`+tags.map(t=>`<button class="chip" data-tag="${esc(t)}" aria-pressed="${calTag===t}">${esc(t)}</button>`).join("");
+  $("calFilter").querySelectorAll(".chip").forEach(b=>b.onclick=()=>{calTag=b.dataset.tag||null;renderCal()});
+}
+function renderCal(){
+  const tk=todayKey();
+  if(!viewMonth){const[y,m]=parseKey(tk);viewMonth=[y,m]}
+  const[y,m]=viewMonth;
+  renderFilter();
+  $("monthTitle").textContent=`${MONTHS[m-1]} ${y}`;
+  const first=new Date(y,m-1,1).getDay(),len=new Date(y,m,0).getDate();
+  let h=["S","M","T","W","T","F","S"].map(x=>`<div class="dow">${x}</div>`).join("");
+  for(let i=0;i<first;i++)h+=`<div class="cell blank"></div>`;
+  for(let d=1;d<=len;d++){
+    const k=keyOf(y,m,d),fut=k>tk,cls=["cell"];
+    if(hasEntry(k))cls.push("has");if(isCore(k))cls.push("core");
+    if(calTag&&hasEntry(k)&&(days[k].tags||[]).includes(calTag))cls.push("match");
+    if(k===tk)cls.push("today");if(k===selKey)cls.push("sel");if(fut)cls.push("future");
+    if(m===settings.bMonth&&d===settings.bDay)cls.push("bday");
+    h+=`<button class="${cls.join(" ")}" data-k="${k}" ${fut?"disabled":""} aria-label="${fmtDate(k)}"><span class="d">${d}</span><span class="n">${fut?"":countFor(k)}</span></button>`;
+  }
+  $("calGrid").innerHTML=h;
+  $("calGrid").classList.toggle("cal-dim",!!calTag);
+  $("calGrid").querySelectorAll("button.cell").forEach(b=>b.onclick=()=>{selKey=b.dataset.k;renderCal()});
+  renderDetail();
+}
+function renderDetail(){
+  const host=$("calDetail");
+  if(!selKey){
+    if(calTag){const n=Object.keys(days).filter(k=>hasEntry(k)&&(days[k].tags||[]).includes(calTag)).length;host.innerHTML=`<p class="hint">${n} day${n===1?"":"s"} tagged ${esc(calTag)} in total.</p>`;return}
+    host.innerHTML=`<p class="hint">Click a day to read its entry, or fill in one you missed.</p>`;return}
+  const d=days[selKey];
+  const editor=()=>{host.innerHTML="";const e=document.createElement("div");e.className="entry";host.appendChild(e);buildEditor(e,selKey,false)};
+  if(!hasEntry(selKey))return editor();
+  host.innerHTML=`<div class="paper" style="display:grid;gap:10px">
+    <div class="row"><h3 class="grow">${fmtDate(selKey)}</h3><span class="label">day ${countFor(selKey)}</span></div>
+    ${d.core?`<div class="coreline">${STAR}<span>${esc(d.coreTitle||"Core memory")}</span></div>`:""}
+    <div class="read"><em>Today I</em> ${esc(d.text)}</div>
+    ${chipsStatic(tagsOf(selKey))}
+    <div><button class="ghost" id="editDay">Edit</button></div></div>`;
+  $("editDay").onclick=editor;
+}
+$("prevM").onclick=()=>{let[y,m]=viewMonth;m--;if(m<1){m=12;y--}viewMonth=[y,m];renderCal()};
+$("nextM").onclick=()=>{let[y,m]=viewMonth;m++;if(m>12){m=1;y++}viewMonth=[y,m];renderCal()};
+
+/* ---------- core memories (grouped by birthday year: Dec 29 → Dec 28) ---------- */
+const summary=t=>{const s=t.split(/(?<=[.!?])\s/)[0];return s.length>70?s.slice(0,68)+"…":s};
+const yearName=by=>settings.birthYear?`Age ${by-settings.birthYear}`:`${by}–${String(by+1).slice(2)}`;
+const yearEnd=by=>fromDn(dn(by+1,settings.bMonth,settings.bDay)-1);
+function renderCore(){
+  const ks=Object.keys(days).filter(isCore).sort().reverse();
+  if(!ks.length){
+    $("coreList").innerHTML=`<div class="paper empty"><b>No core memories yet</b>When a day matters, click the star under "Today I…" before you save.</div>`;
+    return;
+  }
+  const groups=new Map();
+  for(const k of ks){const by=lastBirthday(k)[0];if(!groups.has(by))groups.set(by,[]);groups.get(by).push(k)}
+  $("coreList").innerHTML=[...groups].map(([by,list])=>`<div class="yeargroup">
+      <div class="yearhead">
+        <h2>${yearName(by)}</h2>
+        <span class="hint">${fmtDate(keyOf(by,settings.bMonth,settings.bDay))} → ${fmtDate(yearEnd(by))}</span>
+        <span class="label">${list.length} ${list.length===1?"memory":"memories"}</span>
+      </div>
+      <div class="paper">${list.map(k=>{const d=days[k];return `<div class="mem">
+        <span class="day">day ${countFor(k)}</span><h3>${esc(d.coreTitle||summary(d.text))}</h3>
+        <span class="date">${fmtDate(k)}</span><p>Today I ${esc(d.text)}</p>
+        ${tagsOf(k).length?`<div style="grid-column:2">${chipsStatic(tagsOf(k))}</div>`:""}
+        <button data-k="${k}">Open in calendar</button></div>`}).join("")}</div>
+    </div>`).join("");
+  $("coreList").querySelectorAll("button[data-k]").forEach(b=>b.onclick=()=>{selKey=b.dataset.k;const[y,m]=parseKey(selKey);viewMonth=[y,m];setTab("calendar")});
+}
+
+/* ---------- time capsules ---------- */
+const LOCK='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg>';
+const UNLOCK='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 7.5-2"/></svg>';
+const ripeCapsules=()=>Object.values(capsules).filter(c=>!c.opened&&c.openOn<=todayKey());
+function addMonths(k,n){const[y,m,d]=parseKey(k);const t=new Date(y,m-1+n,1);const last=new Date(t.getFullYear(),t.getMonth()+1,0).getDate();return keyOf(t.getFullYear(),t.getMonth()+1,Math.min(d,last))}
+function capOptions(){
+  const k=todayKey();
+  const bday=fromDn(cycle(k).end);
+  return [
+    {id:"m1",label:"In a month",k:addMonths(k,1)},
+    {id:"m6",label:"In 6 months",k:addMonths(k,6)},
+    {id:"y1",label:"In a year",k:addMonths(k,12)},
+    {id:"bd",label:`On ${bdayName()}`,k:bday},
+    {id:"pick",label:"Pick a date",k:null}
+  ];
+}
+let capChoice="y1";
+function capOpenDate(){
+  if(capChoice==="pick")return $("capDate").value||null;
+  return (capOptions().find(o=>o.id===capChoice)||{}).k||null;
+}
+function updateCapForm(){
+  const opts=capOptions();
+  $("capWhen").innerHTML=opts.map(o=>`<button class="chip" data-id="${o.id}" aria-pressed="${capChoice===o.id}">${o.label}</button>`).join("");
+  $("capWhen").querySelectorAll(".chip").forEach(b=>b.onclick=()=>{capChoice=b.dataset.id;updateCapForm();if(capChoice==="pick")$("capDate").focus()});
+  const tomorrow=fromDn(kdn(todayKey())+1);
+  $("capDate").min=tomorrow;$("capDate").hidden=capChoice!=="pick";
+  const when=capOpenDate(),okText=$("capText").value.trim().length>0,okDate=!!when&&when>todayKey();
+  $("capSeal").disabled=!(okText&&okDate);
+  $("capHint").textContent=!okDate?(capChoice==="pick"?"Pick a day after today.":""):`Opens ${longDate(when)}, ${parseKey(when)[0]}, in ${kdn(when)-kdn(todayKey())} days. You can't read it until then.`;
+}
+$("capText").oninput=updateCapForm;$("capDate").oninput=updateCapForm;
+$("capSeal").onclick=()=>{
+  const when=capOpenDate(),text=$("capText").value.trim();
+  if(!text||!when||when<=todayKey())return;
+  const id="cap"+Date.now();
+  capsules[id]={id,title:$("capTitle").value.trim(),text,created:todayKey(),createdDay:countFor(todayKey()),openOn:when,opened:false};
+  persist();
+  $("capTitle").value="";$("capText").value="";ui.del("capdraft");
+  renderCapsules();
+  $("capHint").textContent=`Sealed. See you on ${fmtDate(when)}.`;
+};
+function renderCapsules(){
+  updateCapForm();
+  const tk=todayKey(),all=Object.values(capsules);
+  const ripe=all.filter(c=>!c.opened&&c.openOn<=tk).sort((a,b)=>a.openOn.localeCompare(b.openOn));
+  const sealed=all.filter(c=>!c.opened&&c.openOn>tk).sort((a,b)=>a.openOn.localeCompare(b.openOn));
+  const opened=all.filter(c=>c.opened).sort((a,b)=>(b.openedOn||"").localeCompare(a.openedOn||""));
+  const title=c=>esc(c.title||"Untitled capsule");
+  const group=(name,list,fn)=>list.length?`<div class="capgroup"><div class="yearhead"><h2>${name}</h2><span class="hint"></span><span class="label">${list.length}</span></div>${list.map(fn).join("")}</div>`:"";
+  let h=group("Ready to open",ripe,c=>`<div class="paper cap ripe">
+      <div class="top">${UNLOCK}<h3 class="grow">${title(c)}</h3></div>
+      <div class="hint">Sealed ${fmtDate(c.created)} (day ${c.createdDay}) · ready since ${fmtDate(c.openOn)}</div>
+      <div><button class="save" data-open="${c.id}">Open it</button></div></div>`)
+   +group("Sealed",sealed,c=>{const tot=kdn(c.openOn)-kdn(c.created)||1,done=kdn(tk)-kdn(c.created),left=kdn(c.openOn)-kdn(tk);
+      return `<div class="paper cap sealed">
+      <div class="top">${LOCK}<h3 class="grow">${title(c)}</h3><span class="label">in ${left} day${left===1?"":"s"}</span></div>
+      <div class="bar"><i style="width:${Math.max(2,Math.min(100,done/tot*100)).toFixed(1)}%"></i></div>
+      <div class="row"><span class="hint grow">Sealed ${fmtDate(c.created)} → opens ${fmtDate(c.openOn)}</span><span id="del-${c.id}"><button class="linkbtn" data-del="${c.id}">Delete</button></span></div></div>`})
+   +group("Opened",opened,c=>`<div class="paper cap" id="cap-${c.id}">
+      <h3>${title(c)}</h3>
+      <div class="hint">Written ${fmtDate(c.created)} (day ${c.createdDay}) · opened ${fmtDate(c.openedOn||c.openOn)}</div>
+      <p class="msg">${esc(c.text)}</p></div>`);
+  if(!all.length)h=`<div class="paper empty"><b>No capsules yet</b>Write one above. It stays sealed until the day you choose.</div>`;
+  $("capLists").innerHTML=h;
+  $("capLists").querySelectorAll("[data-open]").forEach(b=>b.onclick=()=>{
+    const c=capsules[b.dataset.open];c.opened=true;c.openedOn=todayKey();persist();renderCapsules();renderCapBadge();syncTray();
+    const el=$("cap-"+c.id);if(el){el.classList.add("reveal");el.scrollIntoView({behavior:reduced()?"auto":"smooth",block:"center"})}
+  });
+  $("capLists").querySelectorAll("[data-del]").forEach(b=>b.onclick=()=>{
+    const id=b.dataset.del,box=$("del-"+id);
+    box.innerHTML=`<span class="hint">Delete for good? </span><button class="linkbtn danger" data-yes>Delete</button> <button class="linkbtn" data-no>Keep</button>`;
+    box.querySelector("[data-yes]").onclick=()=>{delete capsules[id];persist();renderCapsules()};
+    box.querySelector("[data-no]").onclick=()=>renderCapsules();
+  });
+  renderCapBadge();
+}
+function renderCapBadge(){
+  const n=ripeCapsules().length;
+  $("tabCaps").innerHTML="Capsules"+(n?`<span class="tabdot" aria-label="${n} ready"></span>`:"");
+}
+
+/* ---------- words: what you wrote about most ---------- */
+// Filler is left out (I, the, really, went…); words that carry meaning (slept, gym, Sam) stay.
+const STOP=new Set(`bit day days hour hours hr hrs minute minutes min mins honestly basically actually definitely probably a about above across after afterwards again against ago ah ahh all almost alone along already also although always am among an and another any anybody anyone anything anyway anyways anywhere are aren arent around as at away be became because become been before being below beside besides between beyond both but by can cannot cant could couldnt did didnt do does doesnt doing done dont down during each either else elsewhere enough etc even ever every everybody everyone everything everywhere except far few for from further get gets getting go goes going gone gonna got gotta gotten had hadnt has hasnt have havent having he hed hell her here heres hers herself hes hey him himself his how however hmm i id ie if ill im in into is isnt it itd itll its itself ive just kind kinda least less let lets like literally lol lot lots made make makes many may maybe me meanwhile might mine more moreover most mostly much must my myself near nearly need needed needs neither never nevertheless next no nobody none nor not nothing now of off often oh ok okay on once one ones only onto or other others otherwise our ours ourselves out over overall own per perhaps pretty quite rather really same she shed shell shes should shouldnt since so some somebody somehow someone something sometime sometimes somewhat soon sort sorta still stuff such super than that thatd thatll thats the their theirs them themselves then there therefore theres these they theyd theyll theyre theyve thing things this those though through throughout thru thus till to today together too toward towards ugh um under unless until up upon us very via want wanted wanting wants was wasnt way we wed well went were werent weve what whatever whats when whenever where whereas wherever whether which while who whoever whole whom whose why will with within without wont would wouldnt ya yeah yep yes yet you youd youll your youre yours yourself yourselves youve`.split(/\s+/));
+// words that come before a number without being a class ("slept 8 hours", "day 288", "room 210")
+const NOTSUBJ=new Set(`day days week weeks month months year years hour hours hr hrs min mins minute minutes sec secs mile miles km lap laps page pages chapter ch problem problems question questions pset step steps level round rounds game games room rm floor bus route gate highway hwy apt unit lecture section top slept ran ate walked biked swam lifted lifting spent paid bought read wrote studied worked scored got had did made took watched played turned turning age ages number num episode ep season part vol volume tier`.split(/\s+/));
+// words after a number that mean it's a measurement, not a class ("PSYCH 30" vs "ran 5 miles")
+const UNITS=new Set(`am pm hours hour hrs hr h minutes minute mins min m seconds secs s miles mile mi km k kg lbs lb pounds pages page reps sets times people dollars bucks percent ish st nd rd th mg ml oz cups days weeks`.split(/\s+/));
+const IRREG={slept:"sleep",ate:"eat",ran:"run",wrote:"write",met:"meet",saw:"see",felt:"feel",bought:"buy",took:"take",came:"come",drove:"drive",swam:"swim",sang:"sing",spoke:"speak",taught:"teach",caught:"catch",brought:"bring",won:"win",lost:"lose",sat:"sit",woke:"wake",began:"begin",drank:"drink",flew:"fly",forgot:"forget",paid:"pay",sent:"send",spent:"spend",found:"find",told:"tell",heard:"hear",kept:"keep",thought:"think",built:"build",fell:"fall",gave:"give",threw:"throw",chose:"choose",rode:"ride",grew:"grow",knew:"know",understood:"understand"};
+const classKey=(a,n)=>`${a.toUpperCase()} ${n.toUpperCase()}`;
+const normClass=s=>{const m=String(s).trim().match(/^([A-Za-z]{2,8})\s*(\d{1,3}[A-Za-z]{0,2})$/);return m?classKey(m[1],m[2]):null};
+const entryText=k=>days[k].text.replace(/[’‘]/g,"'");
+const plural=(n,w,p)=>`${n} ${n===1?w:(p||w+"s")}`;
+
+function rawTokens(text){
+  const out=[],re=/[A-Za-z][A-Za-z0-9'\-]*|\d+[A-Za-z]{0,2}/g;let m,prev=0;
+  while((m=re.exec(text))){
+    const gap=text.slice(prev,m.index);
+    out.push({t:m[0],i:m.index,j:m.index+m[0].length,brk:!out.length||/[.!?;:,()\n—–"/&+]/.test(gap),start:!out.length||/[.!?\n]/.test(gap)});
+    prev=m.index+m[0].length;
+  }
+  return out;
+}
+// "PSYCH 30", "esf 30", "CS106B": a short word directly followed by a course-style number
+function pairAt(text,toks,x){
+  const a=toks[x];if(!a)return null;
+  const m=a.t.match(/^([A-Za-z]{2,6})(\d{1,3}[A-Za-z]?)$/);
+  if(m)return{A:m[1],N:m[2],len:1};
+  const b=toks[x+1];
+  if(b&&/^[A-Za-z]{2,8}$/.test(a.t)&&/^\d{1,3}[A-Za-z]?$/.test(b.t)&&/^ +$/.test(text.slice(a.j,b.i)))return{A:a.t,N:b.t,len:2};
+  return null;
+}
+// A class is found automatically when it's written in capitals (ESF 30) or shows up on 2+ days (psych 30).
+function classCandidates(){
+  const seen={};
+  for(const k of Object.keys(days)){
+    if(!hasEntry(k))continue;
+    const text=entryText(k),toks=rawTokens(text);
+    for(let x=0;x<toks.length;x++){
+      const p=pairAt(text,toks,x);if(!p)continue;
+      const low=p.A.toLowerCase();
+      if(STOP.has(low)||NOTSUBJ.has(low))continue;
+      const last=toks[x+p.len-1],nx=toks[x+p.len];
+      if(nx&&/^\s+$/.test(text.slice(last.j,nx.i))&&UNITS.has(nx.t.toLowerCase()))continue;
+      const key=classKey(p.A,p.N),s=seen[key]||(seen[key]={days:new Set(),caps:false});
+      s.days.add(k);if(p.A===p.A.toUpperCase())s.caps=true;
+    }
+  }
+  return Object.keys(seen).filter(c=>seen[c].caps||seen[c].days.size>=2);
+}
+function classList(){const no=new Set(settings.notClasses||[]);return sortTags([...classCandidates(),...(settings.classesAdded||[])]).filter(c=>!no.has(c))}
+
+// sleep/slept/sleeping, class/classes, study/studied/studying: forms merge when the base word
+// appears in your entries, or when two or more forms point to the same base
+function baseCandidates(w){
+  const c=[],s3=w.slice(0,-3),s2=w.slice(0,-2);
+  if(IRREG[w])c.push(IRREG[w]);
+  if(w.length>4&&/ie[sd]$/.test(w))c.push(s3+"y");
+  if(w.length>5&&w.endsWith("ing")){c.push(s3,s3+"e");if(s3.length>2&&s3.at(-1)===s3.at(-2))c.push(s3.slice(0,-1))}
+  if(w.length>4&&w.endsWith("ed")&&!/ied$/.test(w)){c.push(s2,w.slice(0,-1));if(s2.length>2&&s2.at(-1)===s2.at(-2))c.push(s2.slice(0,-1))}
+  if(w.length>3&&/(s|x|z|ch|sh)es$/.test(w))c.push(s2);
+  if(w.length>3&&w.endsWith("s")&&!/(ss|us|is)$/.test(w))c.push(w.slice(0,-1));
+  return c.filter(x=>x.length>=2&&x!==w);
+}
+function rootMap(V){
+  const votes={};
+  for(const w of V)for(const b of new Set(baseCandidates(w)))(votes[b]||(votes[b]=new Set())).add(w);
+  const ok=b=>V.has(b)||(votes[b]&&votes[b].size>=2);
+  const map={};
+  for(const w of V){const c=baseCandidates(w).find(ok);map[w]=c||w}
+  for(const w in map){let r=map[w],g=0;while(map[r]&&map[r]!==r&&g++<4)r=map[r];map[w]=r}
+  return map;
+}
+const adjacent=(text,a,b)=>/^[ -]+$/.test(text.slice(a.j,b.i));
+
+function analyze(){
+  const classes=new Set(classList()),hidden=new Set(settings.hiddenWords||[]),aliases=settings.aliases||{};
+  const entries=Object.keys(days).filter(hasEntry).sort();
+  const raw={},V=new Set();
+  for(const k of entries){
+    const text=entryText(k),toks=rawTokens(text),list=[];
+    for(let x=0;x<toks.length;x++){
+      const p=pairAt(text,toks,x);
+      if(p){const key=classKey(p.A,p.N);if(classes.has(key)){list.push({kind:"c",key:"c:"+key,surface:key,i:toks[x].i,j:toks[x+p.len-1].j,brk:toks[x].brk,start:false});x+=p.len-1;continue}}
+      const a=toks[x];if(/\d/.test(a.t))continue;
+      const w=a.t.toLowerCase().replace(/'s$/,"").replace(/'/g,"").replace(/^-+|-+$/g,"");
+      if(w.length<2||STOP.has(w))continue;
+      V.add(w);
+      list.push({kind:"w",w,surface:a.t.replace(/'s$/i,"").replace(/^-+|-+$/g,""),i:a.i,j:a.j,brk:a.brk,start:a.start});
+    }
+    raw[k]={text,list};
+  }
+  const roots=rootMap(V);
+  for(const k of entries)for(const t of raw[k].list){
+    if(t.kind!=="w")continue;
+    const r=roots[t.w]||t.w,al=aliases[r]||aliases[t.w];
+    if(al&&classes.has(al.slice(2))){t.key=al;t.kind="c";t.aliased=true}else t.key="w:"+r;
+  }
+  // two-word phrases you nearly always use together ("dining hall", "ice cream")
+  const uni={},bi={};
+  for(const k of entries){const L=raw[k].list;for(let x=0;x<L.length;x++){
+    uni[L[x].key]=(uni[L[x].key]||0)+1;const n=L[x+1];
+    if(n&&L[x].kind==="w"&&n.kind==="w"&&adjacent(raw[k].text,L[x],n)){const b=L[x].key+"|"+n.key;bi[b]=(bi[b]||0)+1}
+  }}
+  const phrases=new Set(Object.keys(bi).filter(b=>{const[x,y]=b.split("|");return bi[b]>=3&&bi[b]>=0.6*Math.min(uni[x],uni[y])}));
+  if(phrases.size)for(const k of entries){
+    const L=raw[k].list,out=[];
+    for(let x=0;x<L.length;x++){
+      const n=L[x+1];
+      if(n&&L[x].kind==="w"&&n.kind==="w"&&phrases.has(L[x].key+"|"+n.key)&&adjacent(raw[k].text,L[x],n)){
+        out.push({kind:"p",key:"p:"+L[x].key.slice(2)+" "+n.key.slice(2),surface:raw[k].text.slice(L[x].i,n.j),i:L[x].i,j:n.j,brk:L[x].brk,start:L[x].start});x++;
+      }else out.push(L[x]);
+    }
+    raw[k].list=out;
+  }
+  return {raw,classes,hidden,V};
+}
+function termLabel(o){
+  if(o.kind==="c")return o.key.slice(2);
+  const fe=Object.entries(o.forms).sort((a,b)=>b[1]-a[1]||a[0].length-b[0].length);
+  const form=fe.length?fe[0][0]:o.key.slice(2);
+  if(o.votes&&o.up/o.votes>=0.7)return form.toUpperCase();
+  if(o.votes&&o.cap/o.votes>=0.7)return form.replace(/(^|[\s-])\S/g,c=>c.toUpperCase());
+  return form;
+}
+function aggregate(A,keys){
+  const T={};
+  for(const k of keys){
+    const r=A.raw[k];if(!r)continue;const seen=new Set();
+    for(const t of r.list){
+      if(A.hidden.has(t.key))continue;
+      const o=T[t.key]||(T[t.key]={key:t.key,kind:t.kind,days:0,total:0,forms:{},cap:0,up:0,votes:0,dayList:[]});
+      o.total++;
+      if(!t.aliased){const low=t.surface.toLowerCase();o.forms[low]=(o.forms[low]||0)+1}
+      if(!t.start&&!t.aliased){o.votes++;if(/^[A-Z]/.test(t.surface))o.cap++;if(t.surface.length>1&&t.surface===t.surface.toUpperCase())o.up++}
+      if(!seen.has(t.key)){seen.add(t.key);o.days++;o.dayList.push(k)}
+    }
+  }
+  const list=Object.values(T);
+  for(const o of list)o.label=termLabel(o);
+  return list.sort((a,b)=>b.days-a.days||b.total-a.total||a.label.localeCompare(b.label));
+}
+function highlight(r,key){
+  let h="",at=0;
+  for(const t of r.list){if(t.key!==key)continue;h+=esc(r.text.slice(at,t.i))+`<mark>${esc(r.text.slice(t.i,t.j))}</mark>`;at=t.j}
+  return h+esc(r.text.slice(at));
+}
+
+/* periods */
+let wPeriod=ui.get("wperiod","month"),wOffset=0,wSel=null;
+function rangeTitle(s,e){
+  const a=parseKey(fromDn(s)),b=parseKey(fromDn(e));
+  if(a[0]!==b[0])return `${fmtDate(fromDn(s))} – ${fmtDate(fromDn(e))}`;
+  return a[1]===b[1]?`${MON[a[1]-1]} ${a[2]}–${b[2]}, ${a[0]}`:`${MON[a[1]-1]} ${a[2]} – ${MON[b[1]-1]} ${b[2]}, ${a[0]}`;
+}
+function periodRange(){
+  const tk=todayKey(),t=kdn(tk),[y,m,d]=parseKey(tk);
+  if(wPeriod==="week"){const s=t-new Date(y,m-1,d).getDay()+7*wOffset;return{s,e:s+6,title:wOffset===0?"This week":wOffset===-1?"Last week":rangeTitle(s,s+6),sub:wOffset>=-1?rangeTitle(s,s+6):""}}
+  if(wPeriod==="month"){const dt=new Date(y,m-1+wOffset,1),Y=dt.getFullYear(),M=dt.getMonth()+1;return{s:dn(Y,M,1),e:dn(Y,M,new Date(Y,M,0).getDate()),title:`${MONTHS[M-1]} ${Y}`}}
+  if(wPeriod==="year"){const by=lastBirthday(tk)[0]+wOffset;return{s:dn(by,settings.bMonth,settings.bDay),e:dn(by+1,settings.bMonth,settings.bDay)-1,title:yearName(by),sub:`${fmtDate(keyOf(by,settings.bMonth,settings.bDay))} → ${fmtDate(yearEnd(by))}`}}
+  return{s:-Infinity,e:Infinity,title:"All time"};
+}
+const PERIODS=[["week","Week"],["month","Month"],["year","Year"],["all","All time"]];
+
+function renderWords(){
+  const A=analyze(),R=periodRange(),tk=todayKey();
+  $("wPeriod").innerHTML=PERIODS.map(([id,l])=>`<button class="chip" data-p="${id}" aria-pressed="${wPeriod===id}">${l}</button>`).join("");
+  $("wPeriod").querySelectorAll(".chip").forEach(b=>b.onclick=()=>{wPeriod=b.dataset.p;wOffset=0;wSel=null;ui.set("wperiod",wPeriod);renderWords()});
+  $("wTitle").textContent=R.title;
+  const all=Object.keys(A.raw),first=all.length?kdn(all[0]):kdn(tk);
+  $("wPrev").hidden=$("wNext").hidden=wPeriod==="all";
+  $("wNext").disabled=R.e>=kdn(tk);$("wPrev").disabled=R.s<=first;
+  const keys=all.filter(k=>kdn(k)>=R.s&&kdn(k)<=R.e);
+  const written=keys.reduce((n,k)=>n+days[k].text.trim().split(/\s+/).length,0);
+  $("wMeta").textContent=[R.sub,keys.length?`${plural(keys.length,"entry","entries")} · ${written.toLocaleString("en-US")} words written`:""].filter(Boolean).join(" · ");
+  renderSuggestion(A);
+  const list=aggregate(A,keys);
+  if(!keys.length||!list.length){
+    $("wField").innerHTML=`<div class="empty"><b>${keys.length?"Nothing to show yet":"No entries here yet"}</b>${keys.length?"Write a little more and the words you use most will show up here.":"Write a few “Today I…” entries and the words you use most will show up here."}</div>`;
+    $("wRank").innerHTML="";$("wRankBox").hidden=true;$("wDetail").hidden=true;return;
+  }
+  // in long periods, words from a single day are noise
+  const minDays=(wPeriod==="year"||wPeriod==="all")&&keys.length>=20?2:1;
+  let top=list.filter(o=>o.days>=minDays).slice(0,40);
+  if(!top.length)top=list.slice(0,40);
+  const max=top[0].days,min=top[top.length-1].days;
+  // the most-used words sit in the middle row; the rest spread outward, above and below and to both sides
+  top.forEach((o,i)=>{o.rank=i;const t=max===min?0.55:(o.days-min)/(max-min);o.st=Math.sqrt(t);o.t=t;o.size=(15+41*o.st)*(o.kind==="c"?.8:1)});
+  const W=Math.max(240,($("wField").clientWidth||640)-56);
+  const est=o=>o.label.length*o.size*(o.kind==="c"?.62:.56)+18;
+  const rows=[];let cur=[],sum=0;
+  for(const o of top){const w=est(o);if(cur.length&&sum+w>W){rows.push(cur);cur=[];sum=0}cur.push(o);sum+=w}
+  if(cur.length)rows.push(cur);
+  const placed=[];rows.forEach((r,i)=>{const line=[];r.forEach((o,j)=>{j%2?line.push(o):line.unshift(o)});i%2?placed.push(line):placed.unshift(line)});
+  $("wField").innerHTML=placed.map(line=>`<div class="wline">${line.map(o=>{
+    const cls=["w",o.kind==="c"?"cls":"",o.rank<3?"top":o.t<.2?"dim":""].filter(Boolean).join(" ");
+    return `<button class="${cls}" data-key="${esc(o.key)}" aria-pressed="${wSel===o.key}" style="font-size:${o.size.toFixed(1)}px;font-weight:${Math.round(450+350*o.st)};animation-delay:${reduced()?0:o.rank*24}ms" title="${plural(o.days,"day")} · ${plural(o.total,"mention")}">${esc(o.label)}</button>`;
+  }).join("")}</div>`).join("");
+  $("wField").querySelectorAll(".w").forEach(b=>b.onclick=()=>{wSel=wSel===b.dataset.key?null:b.dataset.key;renderWords();if(wSel)$("wDetail").scrollIntoView({behavior:reduced()?"auto":"smooth",block:"nearest"})});
+  const rk=list.slice(0,8),rmax=rk[0].days;
+  $("wRankBox").hidden=false;
+  $("wRank").innerHTML=rk.map(o=>`<button class="wrow" data-key="${esc(o.key)}" aria-pressed="${wSel===o.key}">
+      <span class="name">${o.kind==="c"?`<span class="clsname">${esc(o.label)}</span>`:esc(o.label)}</span>
+      <span class="cnt">${plural(o.days,"day")}${o.total>o.days?` · ${o.total}×`:""}</span>
+      <span class="bar"><i style="width:${(o.days/rmax*100).toFixed(1)}%"></i></span></button>`).join("");
+  $("wRank").querySelectorAll(".wrow").forEach(b=>b.onclick=()=>{wSel=wSel===b.dataset.key?null:b.dataset.key;renderWords()});
+  renderWordDetail(A,list.find(o=>o.key===wSel));
+}
+function renderWordDetail(A,o){
+  const host=$("wDetail");
+  if(!o){host.hidden=true;return}
+  host.hidden=false;
+  const subj=o.kind==="w"?o.key.slice(2):null;
+  const same=subj?[...A.classes].filter(c=>c.split(" ")[0].toLowerCase()===subj):[];
+  const aliasedTo=o.kind==="c"?Object.keys(settings.aliases||{}).filter(w=>settings.aliases[w]===o.key):[];
+  host.innerHTML=`<div class="row"><h3 class="grow wdh${o.kind==="c"?" clsname":""}">${esc(o.label)}</h3><span class="label">${plural(o.days,"day")} · ${plural(o.total,"mention")}</span></div>
+    ${aliasedTo.length?`<p class="hint" style="margin:0">Includes “${aliasedTo.map(esc).join("”, “")}” on its own.</p>`:""}
+    <div class="otd">${o.dayList.slice().sort().reverse().map(k=>`<div class="otd-item"><button class="linkbtn when" data-k="${k}">${longDate(k)}, ${parseKey(k)[0]} · day ${countFor(k)}</button><p><em>Today I</em> ${highlight(A.raw[k],o.key)}</p></div>`).join("")}</div>
+    <div class="row">${same.length===1?`<button class="ghost" id="wAlias">Count as ${esc(same[0])}</button>`:""}<button class="ghost" id="wHide">Hide from Words</button><button class="ghost" id="wClose">Close</button></div>`;
+  host.querySelectorAll("[data-k]").forEach(b=>b.onclick=()=>{selKey=b.dataset.k;const[y,m]=parseKey(selKey);viewMonth=[y,m];setTab("calendar")});
+  if($("wAlias"))$("wAlias").onclick=()=>{settings.aliases={...(settings.aliases||{}),[subj]:"c:"+same[0]};settings.aliasDecided={...(settings.aliasDecided||{}),[subj]:"together"};wSel="c:"+same[0];persist();renderWords()};
+  $("wHide").onclick=()=>{settings.hiddenWords=[...new Set([...(settings.hiddenWords||[]),o.key])];wSel=null;persist();renderWords()};
+  $("wClose").onclick=()=>{wSel=null;renderWords()};
+}
+// "You also write 'psych' on its own. Should it count as PSYCH 30?"
+function renderSuggestion(A){
+  const host=$("wSuggest"),dec=settings.aliasDecided||{},al=settings.aliases||{};
+  const by={};for(const c of A.classes){const s=c.split(" ")[0].toLowerCase();(by[s]||(by[s]=[])).push(c)}
+  const subj=Object.keys(by).sort().find(s=>by[s].length===1&&!dec[s]&&!al[s]&&A.V.has(s));
+  if(!subj){host.innerHTML="";return}
+  const c=by[subj][0];
+  host.innerHTML=`<div class="paper suggest"><p>You also write “${esc(subj)}” on its own. Should it count as <span class="clsname">${esc(c)}</span>?</p>
+    <div class="row"><button class="save" id="sgYes">Count as ${esc(c)}</button><button class="ghost" id="sgNo">Keep separate</button></div></div>`;
+  $("sgYes").onclick=()=>{settings.aliases={...al,[subj]:"c:"+c};settings.aliasDecided={...dec,[subj]:"together"};persist();renderWords()};
+  $("sgNo").onclick=()=>{settings.aliasDecided={...dec,[subj]:"separate"};persist();renderWords()};
+}
+$("wPrev").onclick=()=>{wOffset--;wSel=null;renderWords()};
+let wResize=null;window.addEventListener("resize",()=>{clearTimeout(wResize);wResize=setTimeout(()=>{if(!$("v-words").hidden)renderWords()},150)});
+$("wNext").onclick=()=>{if(wOffset<0){wOffset++;wSel=null;renderWords()}};
+
+/* settings: classes, counted together, hidden */
+function renderWordSettings(){
+  const classes=classList();
+  $("wsClasses").innerHTML=classes.length?classes.map(c=>`<button class="chip clschip" data-c="${esc(c)}" aria-label="Remove ${esc(c)}">${esc(c)}<span class="x">×</span></button>`).join(""):`<span class="hint">None found yet. A class is found when you write it in capitals (ESF 30) or on two or more days.</span>`;
+  $("wsClasses").querySelectorAll("[data-c]").forEach(b=>b.onclick=()=>{
+    const c=b.dataset.c;
+    settings.classesAdded=(settings.classesAdded||[]).filter(x=>x!==c);
+    if(classCandidates().includes(c))settings.notClasses=[...new Set([...(settings.notClasses||[]),c])];
+    const al={...(settings.aliases||{})};for(const w in al)if(al[w]==="c:"+c)delete al[w];settings.aliases=al;
+    persist();renderWordSettings();
+  });
+  const al=settings.aliases||{},pairs=Object.keys(al).sort();
+  $("wsAliases").innerHTML=pairs.length?pairs.map(w=>`<button class="chip" data-w="${esc(w)}" aria-label="Count ${esc(w)} separately">${esc(w)} → ${esc(al[w].slice(2))}<span class="x">×</span></button>`).join(""):`<span class="hint">Nothing yet.</span>`;
+  $("wsAliases").querySelectorAll("[data-w]").forEach(b=>b.onclick=()=>{const a={...al};delete a[b.dataset.w];settings.aliases=a;settings.aliasDecided={...(settings.aliasDecided||{}),[b.dataset.w]:"separate"};persist();renderWordSettings()});
+  const hid=(settings.hiddenWords||[]).slice().sort();
+  $("wsHidden").innerHTML=hid.length?hid.map(h=>`<button class="chip" data-h="${esc(h)}" aria-label="Show ${esc(h.slice(2))} again">${esc(h.slice(2))}<span class="x">×</span></button>`).join(""):`<span class="hint">Nothing hidden. Use “Hide from Words” on any word.</span>`;
+  $("wsHidden").querySelectorAll("[data-h]").forEach(b=>b.onclick=()=>{settings.hiddenWords=hid.filter(x=>x!==b.dataset.h);persist();renderWordSettings()});
+}
+function addClass(){
+  const c=normClass($("wsNewClass").value);
+  if(!c){$("wsClassHint").textContent="Write it as letters then a number, like CS 106B.";return}
+  settings.classesAdded=sortTags([...(settings.classesAdded||[]),c]);
+  settings.notClasses=(settings.notClasses||[]).filter(x=>x!==c);
+  $("wsNewClass").value="";$("wsClassHint").textContent="";persist();renderWordSettings();
+}
+$("wsAddClass").onclick=addClass;
+$("wsNewClass").onkeydown=e=>{if(e.key==="Enter"){e.preventDefault();addClass()}};
+
+/* ---------- settings ---------- */
+$("setMonth").innerHTML=MONTHS.map((m,i)=>`<option value="${i+1}">${m}</option>`).join("");
+function renderTagManager(){
+  $("tagManager").innerHTML=settings.tags.length?settings.tags.map(t=>`<button class="chip" data-tag="${esc(t)}" aria-label="Remove ${esc(t)}">${esc(t)}<span class="x">×</span></button>`).join(""):`<span class="hint">No tags. Add one below.</span>`;
+  $("tagManager").querySelectorAll(".chip").forEach(b=>b.onclick=()=>{settings.tags=settings.tags.filter(t=>t!==b.dataset.tag);persist();renderTagManager();$("todayEntry").dataset.built="";renderToday()});
+}
+function addTag(){
+  const v=$("newTag").value.trim();if(!v)return;
+  const exists=settings.tags.find(t=>t.toLowerCase()===v.toLowerCase());
+  if(!exists){settings.tags=sortTags([...settings.tags,v]);persist();$("todayEntry").dataset.built="";renderToday()}
+  $("newTag").value="";renderTagManager();
+}
+$("addTag").onclick=addTag;
+$("newTag").onkeydown=e=>{if(e.key==="Enter"){e.preventDefault();addTag()}};
+
+async function renderLogin(){
+  $("setLogin").checked=settings.openAtLogin!==false;
+  if(!api){$("loginHint").textContent="Only available in the app.";return}
+  const s=await api.loginStatus().catch(()=>null);
+  if(!s){$("loginHint").textContent="";return}
+  if(settings.openAtLogin!==false&&s.status==="requires-approval"){
+    $("loginHint").innerHTML=`macOS needs your OK: turn on Day by Day in System Settings → General → Login Items. <button class="ghost" id="openLogin">Open Login Items</button>`;
+    $("openLogin").onclick=()=>api.openLoginSettings();
+  }else $("loginHint").textContent=s.on?"Day by Day will open when you log in.":"";
+}
+function renderSettings(){
+  $("setMonth").value=settings.bMonth;$("setDay").value=settings.bDay;$("setYear").value=settings.birthYear||"";
+  $("setMode").value=settings.mode;$("setFmt").value=settings.fmt;$("setSaved").textContent="";
+  $("setReminder").checked=settings.reminder!==false;$("setReminderTime").value=settings.reminderTime||"22:00";
+  $("setReminderTime").disabled=settings.reminder===false;
+  $("exportMsg").textContent="";
+  $("setHideDock").checked=settings.hideDock!==false;$("setTrayCount").checked=!!settings.trayCount;
+  renderTagManager();renderLogin();renderWordSettings();
+}
+$("saveSettings").onclick=()=>{
+  const bm=+$("setMonth").value,bd=Math.min(Math.max(+$("setDay").value||1,1),new Date(2001,bm,0).getDate()),yr=+$("setYear").value||null;
+  const mode=$("setMode").value;
+  if(mode==="birth"&&!yr){$("setSaved").textContent="Add your birth year to count days since you were born.";return}
+  settings={...settings,bMonth:bm,bDay:bd,birthYear:yr,mode,fmt:$("setFmt").value.trim()||"day {n}"};
+  persist();$("setSaved").textContent="Saved";$("todayEntry").dataset.built="";renderToday();
+};
+$("setReminder").onchange=()=>{settings.reminder=$("setReminder").checked;$("setReminderTime").disabled=!settings.reminder;persist()};
+$("setReminderTime").onchange=()=>{settings.reminderTime=$("setReminderTime").value||"22:00";persist()};
+$("testReminder").onclick=async()=>{
+  const b=$("testReminder");
+  if(!api){b.textContent="Only in the app";return}
+  const ok=await api.testReminder().catch(()=>false);
+  b.textContent=ok?"Sent. Check the top-right corner":"Notifications are off for this app";
+  setTimeout(()=>b.textContent="Send a test",3000);
+};
+$("setHideDock").onchange=()=>{settings.hideDock=$("setHideDock").checked;persist()};
+$("setTrayCount").onchange=()=>{settings.trayCount=$("setTrayCount").checked;persist();setTimeout(syncTray,300)};
+$("setLogin").onchange=()=>{settings.openAtLogin=$("setLogin").checked;persist();setTimeout(renderLogin,400)};
+$("reveal").onclick=()=>{if(api)api.reveal();else $("reveal").textContent="Only available in the app"};
+
+/* ---------- export ---------- */
+function toMarkdown(){
+  const ks=Object.keys(days).filter(hasEntry).sort();
+  const lines=[`# Day by Day`,``,`Exported ${fmtDate(todayKey())} · ${ks.length} entries · ${ks.filter(isCore).length} core memories`,``];
+  let curBy=null;
+  for(const k of ks){
+    const by=lastBirthday(k)[0];
+    if(by!==curBy){curBy=by;lines.push(`## ${yearName(by)} (${fmtDate(keyOf(by,settings.bMonth,settings.bDay))} → ${fmtDate(yearEnd(by))})`,``)}
+    const d=days[k];
+    lines.push(`### ${longDate(k)}, ${parseKey(k)[0]} · day ${countFor(k)}${d.core?` · ★ ${d.coreTitle||"Core memory"}`:""}`,``);
+    lines.push(`Today I ${d.text}`,``);
+    if(tagsOf(k).length)lines.push(`Tags: ${tagsOf(k).join(", ")}`,``);
+  }
+  const caps=Object.values(capsules).sort((a,b)=>a.openOn.localeCompare(b.openOn));
+  if(caps.length){
+    lines.push(`## Time capsules`,``);
+    for(const c of caps){
+      lines.push(`### ${c.title||"Untitled capsule"}`,``,`Sealed ${fmtDate(c.created)} · opens ${fmtDate(c.openOn)}`,``);
+      lines.push(c.opened?c.text:"(Still sealed.)",``);
+    }
+  }
+  return lines.join("\n");
+}
+async function doExport(kind){
+  const msg=$("exportMsg");
+  if(!api){msg.textContent="Export works in the app.";return}
+  const stamp=todayKey();
+  const content=kind==="json"?JSON.stringify({version:3,exportedAt:new Date().toISOString(),settings,days,capsules},null,2):toMarkdown();
+  const path=await api.exportFile({name:`Day by Day ${stamp}.${kind==="json"?"json":"md"}`,content,ext:kind==="json"?"json":"md"}).catch(()=>null);
+  msg.textContent=path?`Saved to ${path}`:"";
+}
+$("exportMd").onclick=()=>doExport("md");
+$("exportJson").onclick=()=>doExport("json");
+
+/* ---------- boot ---------- */
+(async()=>{
+  await load();
+  renderToday();
+  setTab(ui.get("tab","today"));
+  checkDay();
+  if(api) api.onCheckDay(checkDay);
+  if(api&&api.onGoTab) api.onGoTab(t=>{if(!curtainUp){setTab(t);if(t==="today")$("t-text")?.focus()}});
+  document.addEventListener("visibilitychange",()=>{if(!document.hidden)checkDay()});
+  let last=todayKey();
+  setInterval(()=>{if(todayKey()!==last){last=todayKey();$("todayEntry").dataset.built="";renderToday();checkDay()}},20000);
+})();
+})();
+</script>
+</body>
+</html>

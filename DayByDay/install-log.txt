@@ -1,0 +1,12 @@
+
+  Day by Day — building the app
+  ------------------------------
+  Sun Nov  1 22:48:55 PST 2026  ·  macOS 26.5.2  ·  arm64
+  Unpacking…
+  Adding the Day by Day files…
+  Signing (local, ad-hoc)…
+/var/folders/v2/d924lcp5465_jvyklhxn9_200000gn/T/tmp.bH70vvgR2h/Day by Day.app: replacing existing signature
+
+  ✓ Done. Day by Day is in /Applications.
+  Tip: right-click its Dock icon → Options → Keep in Dock.
+
