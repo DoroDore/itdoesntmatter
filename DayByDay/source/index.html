@@ -139,6 +139,9 @@ textarea::placeholder,input::placeholder{color:var(--muted);opacity:.8}
 .envelope.sealed .say{margin:0;font-family:var(--body);font-weight:var(--write);font-size:17px;line-height:1.5}
 .envelope.sealed .say .ti{color:var(--stamp)}
 .mailnote{margin:0}
+/* a page from an earlier day that was started and never filed: a note pinned to the desk */
+.latepage{display:flex;align-items:center;gap:10px;flex-wrap:wrap;padding:10px 14px;background:var(--cream);box-shadow:0 1px 2px var(--shadow)}
+.latepage .hint{color:var(--ink)}
 .row{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
 .core-toggle{display:inline-flex;align-items:center;gap:8px;border:1px solid var(--line);background:none;padding:6px 14px;border-radius:2px;font-size:14px}
 .core-toggle[aria-pressed="true"]{background:var(--cream);border-color:var(--stamp);color:var(--stamp)}
@@ -398,6 +401,7 @@ mark{background:color-mix(in srgb,var(--stamp) 13%,transparent);color:var(--ink)
       <div class="stat"><span class="label">Core memories</span><b id="sCore">0</b></div>
     </div>
     <button class="friendsline" id="friendsLine" hidden></button>
+    <div class="latepage" id="latePage" hidden></div>
     <div class="entry" id="todayEntry"></div>
     <div class="paper otd">
       <div class="row"><span class="label grow">On this day</span><button class="ghost" id="randomBtn">Random day</button></div>
@@ -571,15 +575,20 @@ const chipsStatic=list=>list.length?`<div class="chips">${list.map(t=>`<span cla
 
 /* storage: one JSON file via the app; browser storage only if opened outside the app */
 const api=window.dbd||null;
-let saveTimer=null;
+let saveTimer=null, rev=0; // rev goes up on every change, so work derived from the entries (Words) can be reused until then
 function persist(){
+  rev++;
   clearTimeout(saveTimer);
-  saveTimer=setTimeout(()=>{
-    const data={version:3,settings,days,capsules};
-    if(api) api.save(data).catch(()=>{});
-    else { try{localStorage.setItem("daybyday",JSON.stringify(data))}catch(e){} }
-  },150);
+  saveTimer=setTimeout(saveNow,150);
 }
+function saveNow(){
+  saveTimer=null;
+  const data={version:3,settings,days,capsules};
+  if(api) api.save(data).catch(()=>{});
+  else { try{localStorage.setItem("daybyday",JSON.stringify(data))}catch(e){} }
+}
+// quitting within the 150 ms wait would otherwise drop the last change
+window.addEventListener("pagehide",()=>{if(saveTimer){clearTimeout(saveTimer);saveNow()}});
 async function load(){
   let d={};
   if(api){try{d=await api.load()||{}}catch(e){}}
@@ -711,7 +720,7 @@ function setTab(t){
   if(!$("v-"+t))t="today";
   for(const b of document.querySelectorAll("nav button"))b.setAttribute("aria-selected",String(b.dataset.tab===t));
   for(const v of ["today","calendar","core","capsules","words","friends","settings"])$("v-"+v).hidden=v!==t;
-  if(t==="calendar")renderCal();if(t==="capsules")renderCapsules();if(t==="words")renderWords();if(t==="core")renderCore();if(t==="settings")renderSettings();
+  if(t==="calendar")renderCal();if(t==="capsules")renderCapsules();if(t==="words"){wBloom=true;renderWords()}if(t==="core")renderCore();if(t==="settings")renderSettings();
   if(t==="friends"){renderFriends();loadFriends(true)}
   ui.set("tab",t);
 }
@@ -739,6 +748,7 @@ function renderToday(){
   $("sCore").textContent=Object.keys(days).filter(isCore).length;
   const host=$("todayEntry");
   if(host.dataset.built!==k)buildToday(host,k);
+  renderLatePage();
   renderFriendsLine();
   renderOTD();
   renderCapBadge();
@@ -894,19 +904,37 @@ function sentHTML(k){
       ${ph?`<span class="hint">${line?"With the photo of the page.":"The photo of the page."}</span>`:""}</div></div>`;
 }
 
-let sheetOut=null, freshFor=null; // today's sheet when it's been taken back out of its folder; the day a fresh sheet was laid down
-function filedToday(k){
-  if(!hasEntry(k)||sheetOut===k)return false;
-  const draft=ui.get("draft:"+k,null); // unfiled changes from before the app closed keep the sheet out
-  return draft==null||draft.trim()===(days[k].text||"").trim();
+// An unfiled sheet is kept whole as you go (words, tags, star, photo, envelope), for any day. So nothing on it is lost
+// when the page is rebuilt (a settings change, joining Friends, midnight) or the app quits before it's filed.
+const sheetsOut=new Set(); let freshFor=null; // days taken back out of their folders; the day a fresh sheet was laid down
+const normSheet=s=>({text:(s.text||"").trim(),tags:sortTags(s.tags||[]),core:!!s.core,title:s.core?(s.title||"").trim():"",photo:s.photo||null,
+  shLine:!!s.shLine,line:s.shLine?(s.line||"").trim():"",shPhoto:!!(s.shPhoto&&s.photo)});
+function sheetOf(k){const d=days[k]||{},s=d.share||{};return normSheet({text:d.text,tags:d.tags,core:d.core,title:d.coreTitle,photo:d.photo,shLine:!!s.line,line:s.line,shPhoto:s.photo})}
+const sameSheet=(a,b)=>JSON.stringify(normSheet(a))===JSON.stringify(normSheet(b));
+function draftOf(k){
+  const raw=ui.get("draft:"+k,null);if(raw==null)return null;
+  try{const o=JSON.parse(raw);if(o&&typeof o==="object"&&typeof o.text==="string")return o}catch(e){}
+  return {...sheetOf(k),text:raw}; // drafts from 1.8 held only the words
 }
-function buildToday(host,k){if(filedToday(k))buildFiled(host,k);else buildEditor(host,k,true)}
+const changed=k=>{const dr=draftOf(k);return !!dr&&!sameSheet(dr,sheetOf(k))};
+const isFiled=k=>hasEntry(k)&&!sheetsOut.has(k)&&!changed(k);
+const leftOut=k=>{const dr=draftOf(k);return changed(k)&&!!(dr.text.trim()||dr.photo)}; // started, with something on it, and not filed
+function buildToday(host,k){if(isFiled(k))buildFiled(host,k);else buildEditor(host,k,true)}
 function buildFiled(host,k,arrive){
   host.dataset.built=k;
   host.innerHTML=folderHTML(k,`<span class="label grow">Filed away</span><button class="ghost" id="t-takeout">Take it out</button>`)+sentHTML(k);
   hydratePhotos(host);
-  $("t-takeout").onclick=()=>{sheetOut=k;buildEditor(host,k,true);pullOut($("t-paper"))};
+  $("t-takeout").onclick=()=>{sheetsOut.add(k);buildEditor(host,k,true);pullOut($("t-paper"))};
   if(arrive)arriveFolder(host);
+}
+// a page from the last week that was started but never filed (usually: still writing at midnight)
+function renderLatePage(){
+  const el=$("latePage"),t=kdn(todayKey());
+  let k=null;for(let x=t-1;x>=t-7&&!k;x--)if(leftOut(fromDn(x)))k=fromDn(x);
+  el.hidden=!k;if(!k)return;
+  const whose=k===yesterdayKey()?"Yesterday's":longDate(k)+"'s";
+  el.innerHTML=`<span class="hint grow">${hasEntry(k)?`${whose} page is out of its folder, with changes that haven't been filed.`:`${whose} page is still on the pad. It hasn't been filed.`}</span><button class="ghost" id="lateOpen">Finish it</button>`;
+  $("lateOpen").onclick=()=>{selKey=k;const[y,m]=parseKey(k);viewMonth=[y,m];calTag=null;setTab("calendar");$("calDetail").scrollIntoView({behavior:reduced()?"auto":"smooth",block:"nearest"})};
 }
 // the torn-off sheet drops into its folder, and the sealed envelope settles beside it
 function arriveFolder(root){
@@ -918,11 +946,11 @@ function arriveFolder(root){
 function buildEditor(host,k,isToday){
   host.dataset.built=k;
   const d=days[k]||{};const id=isToday?"t":"c";
-  const draft=isToday?ui.get("draft:"+k,null):null;
-  const chosen=new Set(d.tags||[]);
+  const s0=draftOf(k)||sheetOf(k); // the sheet as it was left: unfiled changes, or else what's filed
+  const chosen=new Set(s0.tags||[]);
   const tagList=sortTags([...(settings.tags||[]),...chosen]);
-  const sh=d.share||{}, withPhoto=canPhoto(), withShare=!!(api&&api.share&&shareState.joined);
-  let photo=d.photo||null; // what this entry will be saved with
+  const withPhoto=canPhoto(), withShare=!!(api&&api.share&&shareState.joined);
+  let photo=s0.photo||null; // what this entry will be saved with
   host.innerHTML=`
     <div class="pad" id="${id}-pad">
       <div class="binding" aria-hidden="true"></div>
@@ -934,19 +962,19 @@ function buildEditor(host,k,isToday){
         <div class="sheetfoot">
           <div class="chips" id="${id}-tags">${tagList.map(t=>`<button class="chip" data-tag="${esc(t)}" aria-pressed="${chosen.has(t)}">${esc(t)}</button>`).join("")}</div>
           <div class="row">
-            <button class="core-toggle" id="${id}-core" aria-pressed="${!!d.core}">${STAR}<span>Core memory</span></button>
-            <div class="grow" id="${id}-titlewrap" ${d.core?"":"hidden"}><input type="text" id="${id}-title" placeholder="Give it a name" maxlength="80"></div>
+            <button class="core-toggle" id="${id}-core" aria-pressed="${!!s0.core}">${STAR}<span>Core memory</span></button>
+            <div class="grow" id="${id}-titlewrap" ${s0.core?"":"hidden"}><input type="text" id="${id}-title" placeholder="Give it a name" maxlength="80"></div>
           </div>
         </div>
       </div></div>
     </div>
     ${withShare?`<div class="mail" id="${id}-mail">
-      <div class="slip" id="${id}-slip"${sh.line?"":" hidden"}><span class="label">Today I…</span><input type="text" id="${id}-snip" maxlength="280" placeholder="the part your friends read" aria-label="Line to send to friends"></div>
+      <div class="slip" id="${id}-slip"${s0.shLine?"":" hidden"}><span class="label">Today I…</span><input type="text" id="${id}-snip" maxlength="280" placeholder="the part your friends read" aria-label="Line to send to friends"></div>
       <div class="envelope"><i class="flap" aria-hidden="true"></i>
         <div class="envbody">
           <div><div class="label">To your friends</div><div class="hint">They see that you wrote${isToday?" today":" this day"}. Nothing from the page goes to them unless you put it in here.</div></div>
-          <label class="check"><input type="checkbox" id="${id}-shLine"${sh.line?" checked":""}> Put a line from this page in the envelope</label>
-          <label class="check" id="${id}-shPhotoWrap" hidden><input type="checkbox" id="${id}-shPhoto"${sh.photo?" checked":""}> Put the photo in too</label>
+          <label class="check"><input type="checkbox" id="${id}-shLine"${s0.shLine?" checked":""}> Put a line from this page in the envelope</label>
+          <label class="check" id="${id}-shPhotoWrap" hidden><input type="checkbox" id="${id}-shPhoto"${s0.shPhoto?" checked":""}> Put the photo in too</label>
           <span class="hint" id="${id}-mailhint"></span>
         </div>
         <i class="flap2" aria-hidden="true"></i><span class="stamp" aria-hidden="true">29</span>
@@ -956,15 +984,20 @@ function buildEditor(host,k,isToday){
       ${hasEntry(k)?`<span class="grow"></span><button class="linkbtn" id="${id}-back">Put it back unchanged</button>`:""}</div>`;
   const ta=$(id+"-text"),ct=$(id+"-core"),tt=$(id+"-title"),sv=$(id+"-save");
   ta.placeholder=isToday?"…write at least one sentence about the main thing that happened.":"…what happened this day?";
-  ta.value=draft??(d.text||"");tt.value=d.coreTitle||"";
-  const dirty=()=>{$(id+"-saved").textContent=hasEntry(k)?"Unsaved changes":""};
+  ta.value=s0.text||"";tt.value=s0.title||d.coreTitle||"";
+  const current=()=>({text:ta.value,tags:[...$(id+"-tags").querySelectorAll('.chip[aria-pressed="true"]')].map(b=>b.dataset.tag),
+    core:ct.getAttribute("aria-pressed")==="true",title:tt.value,photo,
+    shLine:withShare?$(id+"-shLine").checked:!!s0.shLine,line:withShare?$(id+"-snip").value:(s0.line||""),shPhoto:withShare?$(id+"-shPhoto").checked:!!s0.shPhoto});
+  // every change keeps the whole sheet as a draft until it's filed; changing it back to what's filed drops the draft
+  const keep=()=>{const same=sameSheet(current(),sheetOf(k));if(same)ui.del("draft:"+k);else ui.set("draft:"+k,JSON.stringify(current()));$(id+"-saved").textContent=hasEntry(k)&&!same?"Unsaved changes":""};
   const check=()=>{const ok=!!photo||validText(ta.value);sv.disabled=!ok;$(id+"-req").textContent=ok?"⌘↩ to file":withPhoto?"Write a sentence or add a photo first":"Write a sentence first"};
-  ta.oninput=()=>{check();$(id+"-saved").textContent="";if(isToday)ui.set("draft:"+k,ta.value)};
+  ta.oninput=()=>{check();keep()};
   ta.onkeydown=e=>{if(e.key==="Enter"&&(e.metaKey||e.ctrlKey)){e.preventDefault();sv.click()}};
-  $(id+"-tags").querySelectorAll(".chip").forEach(b=>b.onclick=()=>{b.setAttribute("aria-pressed",String(b.getAttribute("aria-pressed")!=="true"));dirty()});
-  ct.onclick=()=>{const on=ct.getAttribute("aria-pressed")!=="true";ct.setAttribute("aria-pressed",String(on));$(id+"-titlewrap").hidden=!on;if(on)tt.focus()};
+  tt.oninput=keep;
+  $(id+"-tags").querySelectorAll(".chip").forEach(b=>b.onclick=()=>{b.setAttribute("aria-pressed",String(b.getAttribute("aria-pressed")!=="true"));keep()});
+  ct.onclick=()=>{const on=ct.getAttribute("aria-pressed")!=="true";ct.setAttribute("aria-pressed",String(on));$(id+"-titlewrap").hidden=!on;if(on)tt.focus();keep()};
   const back=$(id+"-back");
-  if(back)back.onclick=()=>{if(isToday){ui.del("draft:"+k);sheetOut=null;buildFiled(host,k,true)}else renderDetail()};
+  if(back)back.onclick=()=>{ui.del("draft:"+k);sheetsOut.delete(k);if(isToday)buildFiled(host,k,true);else{renderDetail();renderLatePage()}};
 
   // a photo of a paper journal page, instead of or as well as the sentence
   const slot=$(id+"-photo");
@@ -976,7 +1009,7 @@ function buildEditor(host,k,isToday){
     hydratePhotos(slot);
     slot.querySelector('[data-act="add"]').onclick=()=>addPhoto(()=>api.photo.pick());
     const rm=slot.querySelector('[data-act="remove"]');
-    if(rm)rm.onclick=()=>{photo=null;renderSlot();dirty();check()};
+    if(rm)rm.onclick=()=>{photo=null;renderSlot();keep();check()};
     syncShare();
   }
   async function addPhoto(get){
@@ -989,7 +1022,7 @@ function buildEditor(host,k,isToday){
       const c=await cleanPhoto(r.dataUrl);
       const s=await api.photo.save(k,c.bytes);
       if(!s||s.error){photoMsg((s&&s.error)||"That picture couldn't be saved.");return}
-      photoCache.set(s.name,c.url);photo=s.name;renderSlot();dirty();check();
+      photoCache.set(s.name,c.url);photo=s.name;renderSlot();keep();check();
     }catch(e){photoMsg("That picture couldn't be opened.")}
   }
   if(slot){
@@ -1009,7 +1042,7 @@ function buildEditor(host,k,isToday){
   }
   if(withShare){
     const snip=$(id+"-snip");
-    snip.value=sh.line||"";
+    snip.value=s0.line||"";
     $(id+"-shLine").onchange=()=>{
       const on=$(id+"-shLine").checked;
       if(on){
@@ -1017,9 +1050,9 @@ function buildEditor(host,k,isToday){
         const part=ta.value.slice(ta.selectionStart,ta.selectionEnd).replace(/\s+/g," ").trim();
         if(part)snip.value=clip(part,280);else if(!snip.value.trim())snip.value=firstSentence(ta.value);
       }
-      syncShare();if(on)snip.focus();dirty();
+      syncShare();if(on)snip.focus();keep();
     };
-    snip.oninput=dirty;$(id+"-shPhoto").onchange=dirty;
+    snip.oninput=keep;$(id+"-shPhoto").onchange=keep;
   }
   if(slot)renderSlot();else syncShare();
 
@@ -1029,11 +1062,13 @@ function buildEditor(host,k,isToday){
     const core=ct.getAttribute("aria-pressed")==="true";
     const tags=sortTags([...$(id+"-tags").querySelectorAll('.chip[aria-pressed="true"]')].map(b=>b.dataset.tag));
     const share=withShare?{line:$(id+"-shLine").checked?clip($(id+"-snip").value.trim(),280):"",photo:!!photo&&$(id+"-shPhoto").checked}:days[k]?.share;
+    const was=hasEntry(k);
     days[k]={...(days[k]||{}),text:ta.value.trim(),tags,core,coreTitle:core?tt.value.trim():"",photo,n:countFor(k),updatedAt:Date.now(),...(share?{share}:{})};
-    if(k===todayKey()){ui.del("draft:"+k);sheetOut=null}
+    ui.del("draft:"+k);sheetsOut.delete(k);
     persist();
     pushShare(k);
-    if(k!==todayKey()&&hasEntry(todayKey()))pushShare(todayKey()); // filling in a missed day can lengthen today's streak
+    // filling in a missed day lengthens the streak on every day after it, so friends get those again (the last week's)
+    if(!was){const end=kdn(todayKey());for(let t=kdn(k)+1;t<=end&&hasEntry(fromDn(t));t++)if(t>end-7)pushShare(fromDn(t))}
     filing=true;sv.disabled=true;
     if(!isToday&&k===todayKey())$("todayEntry").dataset.built="";
     renderToday(); // the counts and streak update right away; the sheet is filed once it's torn off
@@ -1041,7 +1076,7 @@ function buildEditor(host,k,isToday){
     if(isToday){if(host.dataset.built===k)buildFiled(host,k,true)}
     else{renderCal();arriveFolder($("calDetail"))}
   };
-  check();
+  check();keep();
   if(isToday&&!hasEntry(k)&&freshFor!==k&&!curtainUp&&!$("v-today").hidden){freshFor=k;layFreshSheet()}
 }
 
@@ -1080,10 +1115,10 @@ function renderDetail(){
     if(calTag){const n=Object.keys(days).filter(k=>hasEntry(k)&&(days[k].tags||[]).includes(calTag)).length;host.innerHTML=`<p class="hint">${n} day${n===1?"":"s"} tagged ${esc(calTag)} in total.</p>`;return}
     host.innerHTML=`<p class="hint">Click a day to read its entry, or fill in one you missed.</p>`;return}
   const editor=()=>{host.innerHTML="";const e=document.createElement("div");e.className="entry";host.appendChild(e);buildEditor(e,selKey,false)};
-  if(!hasEntry(selKey))return editor();
+  if(!isFiled(selKey))return editor();
   host.innerHTML=folderHTML(selKey,`<span class="label grow">Filed away</span><button class="ghost" id="editDay">Take it out</button>`)+sentHTML(selKey);
   hydratePhotos(host);
-  $("editDay").onclick=()=>{editor();pullOut($("c-paper"))};
+  $("editDay").onclick=()=>{sheetsOut.add(selKey);editor();pullOut($("c-paper"))};
 }
 $("prevM").onclick=()=>{let[y,m]=viewMonth;m--;if(m<1){m=12;y--}viewMonth=[y,m];renderCal()};
 $("nextM").onclick=()=>{let[y,m]=viewMonth;m++;if(m>12){m=1;y++}viewMonth=[y,m];renderCal()};
@@ -1364,10 +1399,13 @@ function periodRange(){
 }
 const PERIODS=[["week","Week"],["month","Month"],["year","Year"],["all","All time"]];
 
+// The analysis reads every entry twice over, so it's kept until an entry or setting changes (rev), not redone on each click.
+let wMemo=null, wBloom=true; // wBloom: the cloud blooms in when a period is first shown, not when you pick a word in it
+const analyzed=()=>(wMemo&&wMemo.rev===rev?wMemo.A:(wMemo={rev,A:analyze()}).A);
 function renderWords(){
-  const A=analyze(),R=periodRange(),tk=todayKey();
+  const A=analyzed(),R=periodRange(),tk=todayKey(),bloom=wBloom&&!reduced();wBloom=false;
   $("wPeriod").innerHTML=PERIODS.map(([id,l])=>`<button class="chip" data-p="${id}" aria-pressed="${wPeriod===id}">${l}</button>`).join("");
-  $("wPeriod").querySelectorAll(".chip").forEach(b=>b.onclick=()=>{wPeriod=b.dataset.p;wOffset=0;wSel=null;ui.set("wperiod",wPeriod);renderWords()});
+  $("wPeriod").querySelectorAll(".chip").forEach(b=>b.onclick=()=>{wPeriod=b.dataset.p;wOffset=0;wSel=null;wBloom=true;ui.set("wperiod",wPeriod);renderWords()});
   $("wTitle").textContent=R.title;
   const all=Object.keys(A.raw),first=all.length?kdn(all[0]):kdn(tk);
   $("wPrev").hidden=$("wNext").hidden=wPeriod==="all";
@@ -1396,7 +1434,7 @@ function renderWords(){
   const placed=[];rows.forEach((r,i)=>{const line=[];r.forEach((o,j)=>{j%2?line.push(o):line.unshift(o)});i%2?placed.push(line):placed.unshift(line)});
   $("wField").innerHTML=placed.map(line=>`<div class="wline">${line.map(o=>{
     const cls=["w",o.kind==="c"?"cls":"",o.rank<3?"top":o.t<.2?"dim":""].filter(Boolean).join(" ");
-    return `<button class="${cls}" data-key="${esc(o.key)}" aria-pressed="${wSel===o.key}" style="font-size:${o.size.toFixed(1)}px;font-weight:${Math.round(250+550*o.st)};animation-delay:${reduced()?0:o.rank*24}ms" title="${plural(o.days,"day")} · ${plural(o.total,"mention")}">${esc(o.label)}</button>`;
+    return `<button class="${cls}" data-key="${esc(o.key)}" aria-pressed="${wSel===o.key}" style="font-size:${o.size.toFixed(1)}px;font-weight:${Math.round(250+550*o.st)};${bloom?`animation-delay:${o.rank*24}ms`:"animation:none"}" title="${plural(o.days,"day")} · ${plural(o.total,"mention")}">${esc(o.label)}</button>`;
   }).join("")}</div>`).join("");
   $("wField").querySelectorAll(".w").forEach(b=>b.onclick=()=>{wSel=wSel===b.dataset.key?null:b.dataset.key;renderWords();if(wSel)$("wDetail").scrollIntoView({behavior:reduced()?"auto":"smooth",block:"nearest"})});
   const rk=list.slice(0,8),rmax=rk[0].days;
@@ -1436,9 +1474,9 @@ function renderSuggestion(A){
   $("sgYes").onclick=()=>{settings.aliases={...al,[subj]:"c:"+c};settings.aliasDecided={...dec,[subj]:"together"};persist();renderWords()};
   $("sgNo").onclick=()=>{settings.aliasDecided={...dec,[subj]:"separate"};persist();renderWords()};
 }
-$("wPrev").onclick=()=>{wOffset--;wSel=null;renderWords()};
+$("wPrev").onclick=()=>{wOffset--;wSel=null;wBloom=true;renderWords()};
 let wResize=null;window.addEventListener("resize",()=>{clearTimeout(wResize);wResize=setTimeout(()=>{if(!$("v-words").hidden)renderWords()},150)});
-$("wNext").onclick=()=>{if(wOffset<0){wOffset++;wSel=null;renderWords()}};
+$("wNext").onclick=()=>{if(wOffset<0){wOffset++;wSel=null;wBloom=true;renderWords()}};
 
 /* settings: classes, counted together, hidden */
 function renderWordSettings(){
@@ -1661,7 +1699,8 @@ function renderFriendLists(){
   });
   host.querySelectorAll("img[data-fphoto]").forEach(async img=>{
     const key=img.dataset.fphoto+"@"+img.dataset.v;
-    if(!friendPhotoCache.has(key)){const r=await api.share.photo(img.dataset.fphoto,img.dataset.v).catch(()=>null);if(!r||!r.ok){img.remove();return}friendPhotoCache.set(key,r.data)}
+    // kept in memory for this session, at most 30 (the app can run for weeks in the menu bar; the disk cache has the rest)
+    if(!friendPhotoCache.has(key)){const r=await api.share.photo(img.dataset.fphoto,img.dataset.v).catch(()=>null);if(!r||!r.ok){img.remove();return}friendPhotoCache.set(key,r.data);if(friendPhotoCache.size>30)friendPhotoCache.delete(friendPhotoCache.keys().next().value)}
     img.src=friendPhotoCache.get(key);
   });
 }

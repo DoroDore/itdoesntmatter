@@ -258,14 +258,20 @@ function createSharing(o) {
     const objectPath = `${userId}/${day}.jpg`;
     let photoPath = null;
     if (item.photo) {
-      const file = o.photoPath(item.photo);
-      let bytes = null;
-      try { bytes = file ? fs.readFileSync(file) : null; } catch (e) {}
-      if (bytes) {
-        await call("POST", `/storage/v1/object/${BUCKET}/${objectPath}`, {
-          raw: bytes, headers: { "Content-Type": "image/jpeg", "x-upsert": "true", "cache-control": "3600" }, timeout: 60000
-        });
-        photoPath = objectPath;
+      // A saved photo's name is unique and its file never changes, so one already uploaded under this name isn't sent
+      // again (editing a tag, or re-sending a streak, would otherwise upload half a megabyte each time).
+      if ((load().uploaded || {})[objectPath] === item.photo) photoPath = objectPath;
+      else {
+        const file = o.photoPath(item.photo);
+        let bytes = null;
+        try { bytes = file ? fs.readFileSync(file) : null; } catch (e) {}
+        if (bytes) {
+          await call("POST", `/storage/v1/object/${BUCKET}/${objectPath}`, {
+            raw: bytes, headers: { "Content-Type": "image/jpeg", "x-upsert": "true", "cache-control": "3600" }, timeout: 60000
+          });
+          update((s) => { (s.uploaded = s.uploaded || {})[objectPath] = item.photo; });
+          photoPath = objectPath;
+        }
       }
     }
     // the post first: once it stops pointing at the photo, friends can no longer read the photo
@@ -274,7 +280,9 @@ function createSharing(o) {
       headers: { Prefer: "resolution=merge-duplicates,return=minimal" }
     });
     if (!photoPath) {
-      // then remove the file itself (usually there isn't one); if that fails, try again on a later flush
+      // then remove the file itself (usually there isn't one); if that fails, try again on a later flush.
+      // Either way it no longer counts as uploaded, so sharing it again sends it again.
+      update((s) => { if (s.uploaded) delete s.uploaded[objectPath]; });
       try { await deleteObject(objectPath); }
       catch (e) { update((s) => { s.cleanup = [...new Set([...(s.cleanup || []), objectPath])]; }); }
     }

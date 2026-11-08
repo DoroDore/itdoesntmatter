@@ -297,6 +297,21 @@ const rejects = async (p, code, msg) => { try { await p; ok(false, msg + " (did 
     await cy.flush();
     ok(!!server.objects[cyId + "/2026-11-14.jpg"], "re-sharing cancels a pending delete of the same photo");
 
+    // a photo that's already up isn't sent again
+    const uploads = () => server.calls.filter((c) => c.startsWith("POST /storage/v1/object/journal-photos/")).length;
+    server.calls = [];
+    await cy.push({ day: "2026-11-14", streak: 6, snippet: "changed a tag", photo: "2026-11-14-1762800000000.jpg" });
+    ok(uploads() === 0 && server.posts[cyId + "2026-11-14"].photo_path === cyId + "/2026-11-14.jpg", "re-sending a day with the same photo doesn't upload it again, and the post still points at it");
+    files.set("/cy/photos/2026-11-14-1762900000000.jpg", { data: Buffer.from(JPEG) });
+    server.calls = [];
+    await cy.push({ day: "2026-11-14", streak: 6, photo: "2026-11-14-1762900000000.jpg" });
+    ok(uploads() === 1, "a replaced photo is uploaded");
+    await cy.push({ day: "2026-11-14", streak: 6, photo: null });
+    ok(!server.objects[cyId + "/2026-11-14.jpg"], "…unsharing it deletes it");
+    server.calls = [];
+    await cy.push({ day: "2026-11-14", streak: 6, photo: "2026-11-14-1762900000000.jpg" });
+    ok(uploads() === 1 && !!server.objects[cyId + "/2026-11-14.jpg"], "…and sharing it again uploads it again");
+
     // the day number can be taken back from everything shared
     await cy.push({ day: "2026-11-15", count: 320, streak: 6 });
     ok(server.posts[cyId + "2026-11-15"].count === 320, "the day number is shared when you choose to");

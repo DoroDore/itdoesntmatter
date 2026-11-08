@@ -183,9 +183,14 @@ app.on("second-instance", () => showWindow());
 app.on("before-quit", () => { quitting = true; });
 
 /* ---------- open at login ---------- */
+// Checked at launch and whenever the setting changes, not on every save. Re-applying it on each save also
+// turned it back on after you'd switched it off in System Settings.
+let loginApplied = null;
 function applyLoginItem() {
   if (DEV) return; // it would register the bare Electron binary
   const want = (cache.settings || {}).openAtLogin !== false;
+  if (want === loginApplied) return;
+  loginApplied = want;
   try {
     if (app.getLoginItemSettings().openAtLogin !== want) app.setLoginItemSettings({ openAtLogin: want });
   } catch (e) {}

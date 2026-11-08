@@ -16,6 +16,7 @@ Run the installer again whenever the code in `source/` changes. Your entries are
 - Each day gets a fresh sheet on the pad. Write at least one "Today I…" sentence on it, or add a photo of your paper journal.
 - **Tear off and file** (or ⌘↩) saves it. The sheet tears off the pad and drops into that day's folder.
 - To change it, press **Take it out**, edit it, and file it again. **Put it back unchanged** returns it as it was.
+- A sheet you haven't filed keeps everything on it (words, tags, star, photo, envelope), even if you quit. If you were still writing at midnight, Today shows a note that yesterday's page hasn't been filed; **Finish it** opens it.
 - Past days are filed in the **Calendar**. Click one to read it, or to fill in a day you missed.
 
 ## Paper journals
