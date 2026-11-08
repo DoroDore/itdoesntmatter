@@ -95,5 +95,5 @@ Everything is in `~/Library/Application Support/Day by Day/`:
 - `source/share.js` is the Friends client (Supabase sign-in, friends, sharing, offline outbox). It runs in the main process, so the page never talks to the network.
 - `source/share-config.json` says which Supabase project Friends uses. It's empty until someone sets it up.
 - `supabase/setup.sql` creates Friends' tables and privacy rules. `supabase/test/` tests them.
-- `source/icon.icns` is the app icon.
+- `source/icon.icns` is the app icon. It's drawn in `dev/icon.html`; after changing that, run `dev/make-icon.sh` (it needs Google Chrome) and then the installer.
 - `dev/run.sh` runs the app straight from `source/` without installing, with separate practice data, so your real entries aren't touched. In VS Code, press **⇧⌘B** to run it, or **F5** to run it with the debugger on `main.js`. In the app, **⌥⌘I** opens DevTools for the page. Use the task **Run Day by Day as a new user** to start from empty practice data.

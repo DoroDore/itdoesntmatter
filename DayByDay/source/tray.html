@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; font-src 'self'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; font-src 'self'; img-src 'self' data:">
 <title>Day by Day</title>
 <style>
 /* Fraunces (variable: wght 100-900, opsz, SOFT, WONK). Optical size follows the font size on its own. */
@@ -11,19 +11,29 @@
 /* Menu bar popover: a small printed card of the app's pale blue paper and brown ink (brown paper, blue ink in dark mode), with a fine double rule, that opens from its center outward. */
 :root{
   --paper:#E3EBF5; --paper-edge:#CEDAE9; --ink:#2A1A15; --dim:#584640; --stamp:#93302A; --btn-ink:#E3EBF4;
+  /* the same paper as the app (see index.html): tooth, formation, mottling, and paper showing through solid ink */
+  --tooth:url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' width='200' height='200'><filter id='f' x='0' y='0' width='100%25' height='100%25'><feTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='2' seed='1' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 .17  0 0 0 0 .11  0 0 0 0 .08  .5 0 0 0 -.23'/></filter><rect width='100%25' height='100%25' filter='url(%23f)'/></svg>");
+  --formation:url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' width='400' height='400'><filter id='f' x='0' y='0' width='100%25' height='100%25'><feTurbulence type='fractalNoise' baseFrequency='.025' numOctaves='3' seed='9' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 .17  0 0 0 0 .11  0 0 0 0 .08  .1 0 0 0 -.034'/></filter><rect width='100%25' height='100%25' filter='url(%23f)'/></svg>");
+  --mottle:url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' width='600' height='600'><filter id='f' x='0' y='0' width='100%25' height='100%25'><feTurbulence type='fractalNoise' baseFrequency='.005' numOctaves='4' seed='4' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 .17  0 0 0 0 .11  0 0 0 0 .08  .16 0 0 0 -.06'/></filter><rect width='100%25' height='100%25' filter='url(%23f)'/></svg>");
+  --speck:url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' width='160' height='160'><filter id='f' x='0' y='0' width='100%25' height='100%25'><feTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='1' seed='3' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 .99  0 0 0 0 .97  0 0 0 0 .93  .5 0 0 0 -.31'/></filter><rect width='100%25' height='100%25' filter='url(%23f)'/></svg>");
+  --ink-mask:url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' width='150' height='150'><filter id='f' x='0' y='0' width='100%25' height='100%25'><feTurbulence type='fractalNoise' baseFrequency='.06' numOctaves='3' seed='5' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  3 0 0 0 -.45' result='blot'/><feTurbulence type='fractalNoise' baseFrequency='.8' numOctaves='1' seed='2' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  -6 0 0 0 5.3' result='speck'/><feComposite in='blot' in2='speck' operator='arithmetic' k1='1'/></filter><rect width='100%25' height='100%25' filter='url(%23f)'/></svg>");
   --display:"Fraunces",Georgia,serif;
   --ui:"Fraunces",Georgia,serif;
   color-scheme:light;
 }
 @media (prefers-color-scheme: dark){:root{
   --paper:#291B17; --paper-edge:#170F0C; --ink:#D3DEEC; --dim:#929FB4; --stamp:#E59C90; --btn-ink:#1C1310;
+  --tooth:url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' width='200' height='200'><filter id='f' x='0' y='0' width='100%25' height='100%25'><feTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='2' seed='1' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 .92  0 0 0 0 .95  0 0 0 0 .98  .3 0 0 0 -.14'/></filter><rect width='100%25' height='100%25' filter='url(%23f)'/></svg>");
+  --formation:url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' width='400' height='400'><filter id='f' x='0' y='0' width='100%25' height='100%25'><feTurbulence type='fractalNoise' baseFrequency='.025' numOctaves='3' seed='9' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 .92  0 0 0 0 .95  0 0 0 0 .98  .07 0 0 0 -.025'/></filter><rect width='100%25' height='100%25' filter='url(%23f)'/></svg>");
+  --mottle:url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' width='600' height='600'><filter id='f' x='0' y='0' width='100%25' height='100%25'><feTurbulence type='fractalNoise' baseFrequency='.005' numOctaves='4' seed='4' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  .36 0 0 0 -.13'/></filter><rect width='100%25' height='100%25' filter='url(%23f)'/></svg>");
+  --speck:url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' width='160' height='160'><filter id='f' x='0' y='0' width='100%25' height='100%25'><feTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='1' seed='3' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 .1  0 0 0 0 .07  0 0 0 0 .06  .5 0 0 0 -.31'/></filter><rect width='100%25' height='100%25' filter='url(%23f)'/></svg>");
   color-scheme:dark}}
 *{box-sizing:border-box}
 html,body{margin:0;height:100%;background:transparent;overflow:hidden;-webkit-user-select:none;user-select:none;cursor:default}
 body{font-family:var(--ui);color:var(--ink);-webkit-font-smoothing:antialiased;padding:6px 14px 18px}
 .card{
   position:relative;height:100%;border-radius:4px;
-  background:radial-gradient(120% 100% at 50% 0%,var(--paper) 0%,var(--paper-edge) 80%);
+  background:var(--tooth),var(--formation),var(--mottle),radial-gradient(120% 100% at 50% 0%,var(--paper) 0%,var(--paper-edge) 80%);
   border:1px solid color-mix(in srgb,var(--ink) 16%,transparent);
   box-shadow:0 10px 28px rgba(0,0,0,.3),0 1px 0 rgba(255,255,255,.12) inset;
   display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;padding:18px 18px 16px;
@@ -31,7 +41,7 @@ body{font-family:var(--ui);color:var(--ink);-webkit-font-smoothing:antialiased;p
   transition:clip-path .32s cubic-bezier(.2,.8,.2,1),opacity .2s ease;
 }
 .open .card{clip-path:inset(-40px -40px -40px -40px round 4px);opacity:1}
-.card::before{content:"";position:absolute;inset:7px;border:3px double color-mix(in srgb,var(--ink) 28%,transparent);pointer-events:none}
+.card::before{content:"";position:absolute;inset:7px;border:3px double color-mix(in srgb,var(--ink) 28%,transparent);pointer-events:none;mask-image:var(--ink-mask);mask-size:150px}
 .label{font-size:10.5px;font-weight:600;letter-spacing:.16em;text-transform:uppercase;color:var(--dim)}
 .pending .label{color:var(--stamp)}
 .num{font-family:var(--display);font-weight:300;font-variation-settings:"SOFT" 0,"WONK" 0;font-size:76px;line-height:.95;letter-spacing:-.01em;font-variant-numeric:lining-nums tabular-nums;
@@ -42,11 +52,11 @@ body{font-family:var(--ui);color:var(--ink);-webkit-font-smoothing:antialiased;p
 .open .sub{opacity:1}
 button{
   position:relative;width:100%;font:inherit;font-family:var(--display);font-weight:650;font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:var(--btn-ink);
-  background:var(--ink);border:0;border-radius:2px;padding:11px 12px;cursor:pointer;
+  background:var(--speck),var(--ink);border:0;border-radius:2px;padding:11px 12px;cursor:pointer;
   opacity:0;transition:opacity .3s .24s,background .15s,transform .1s;
 }
 .open button{opacity:1}
-button:hover{background:color-mix(in srgb,var(--ink) 85%,var(--paper))}
+button:hover{background-color:color-mix(in srgb,var(--ink) 85%,var(--paper))}
 button:active{transform:scale(.98)}
 button:focus-visible{outline:2px solid var(--stamp);outline-offset:2px}
 .flip{perspective:400px;display:flex;flex-direction:column;align-items:center;gap:4px;cursor:default}

@@ -27,7 +27,23 @@
   --folder:#E4D8BC; --folder-front:#EADFC6; --env:#F3EDE0; --env-flap:#E7DDC8; --shadow:color-mix(in srgb,#2A1A15 22%,transparent);
   /* full-screen moments (the curtain) */
   --c-bg:#E3EBF5; --c-edge:#CEDAE9; --c-deep:#B9CAE0; --c-ink:#2A1A15; --c-dim:#584640; --c-stamp:#93302A; --c-glow:#EEE8D8;
-  --grain:url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' width='180' height='180'><filter id='g'><feTurbulence type='fractalNoise' baseFrequency='.8' numOctaves='3' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 .16  0 0 0 0 .1  0 0 0 0 .08  0 0 0 .09 0'/></filter><rect width='100%25' height='100%25' filter='url(%23g)'/></svg>");
+  /* Paper. Every paper is its color under a few layers: fine tooth, a faint cloudiness (formation), broad mottling, and
+     fibers and flecks drawn by the paper mill in the script (--fibers-*). Light falls a little from the top left (--lift). */
+  --tooth:url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' width='200' height='200'><filter id='f' x='0' y='0' width='100%25' height='100%25'><feTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='2' seed='1' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 .17  0 0 0 0 .11  0 0 0 0 .08  .5 0 0 0 -.23'/></filter><rect width='100%25' height='100%25' filter='url(%23f)'/></svg>");
+  --tooth-rough:url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' width='200' height='200'><filter id='f' x='0' y='0' width='100%25' height='100%25'><feTurbulence type='fractalNoise' baseFrequency='.7' numOctaves='3' seed='2' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 .17  0 0 0 0 .11  0 0 0 0 .08  .55 0 0 0 -.24'/></filter><rect width='100%25' height='100%25' filter='url(%23f)'/></svg>");
+  --formation:url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' width='400' height='400'><filter id='f' x='0' y='0' width='100%25' height='100%25'><feTurbulence type='fractalNoise' baseFrequency='.025' numOctaves='3' seed='9' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 .17  0 0 0 0 .11  0 0 0 0 .08  .1 0 0 0 -.034'/></filter><rect width='100%25' height='100%25' filter='url(%23f)'/></svg>");
+  --mottle:url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' width='600' height='600'><filter id='f' x='0' y='0' width='100%25' height='100%25'><feTurbulence type='fractalNoise' baseFrequency='.005' numOctaves='4' seed='4' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 .17  0 0 0 0 .11  0 0 0 0 .08  .16 0 0 0 -.06'/></filter><rect width='100%25' height='100%25' filter='url(%23f)'/></svg>");
+  --lift:linear-gradient(168deg,rgb(255 255 255/.3),transparent 45%,rgb(60 40 30/.03));
+  --speck:url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' width='160' height='160'><filter id='f' x='0' y='0' width='100%25' height='100%25'><feTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='1' seed='3' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 .99  0 0 0 0 .97  0 0 0 0 .93  .5 0 0 0 -.31'/></filter><rect width='100%25' height='100%25' filter='url(%23f)'/></svg>");
+  --speck-pale:url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' width='160' height='160'><filter id='f' x='0' y='0' width='100%25' height='100%25'><feTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='1' seed='3' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 .99  0 0 0 0 .97  0 0 0 0 .93  .5 0 0 0 -.31'/></filter><rect width='100%25' height='100%25' filter='url(%23f)'/></svg>");
+  --ink-mask:url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' width='150' height='150'><filter id='f' x='0' y='0' width='100%25' height='100%25'><feTurbulence type='fractalNoise' baseFrequency='.06' numOctaves='3' seed='5' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  3 0 0 0 -.45' result='blot'/><feTurbulence type='fractalNoise' baseFrequency='.8' numOctaves='1' seed='2' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  -6 0 0 0 5.3' result='speck'/><feComposite in='blot' in2='speck' operator='arithmetic' k1='1'/></filter><rect width='100%25' height='100%25' filter='url(%23f)'/></svg>");
+  --shadow-near:color-mix(in srgb,#2A1A15 12%,transparent); --crease:rgb(255 255 255/.4); --tear-rim:rgb(255 255 255/.6);
+  --fibers-desk:var(--fib-desk-l,none); --fibers-sheet:var(--fib-sheet-l,none); --fibers-folder:var(--fib-folder-l,none); --fibers-env:var(--fib-env-l,none);
+  --tex-desk:var(--fibers-desk),var(--tooth),var(--mottle);
+  --tex-sheet:var(--lift),var(--fibers-sheet),var(--tooth),var(--formation);
+  --tex-folder:var(--fibers-folder),var(--tooth-rough),var(--formation),var(--mottle);
+  --tex-env:var(--lift),var(--fibers-env),var(--tooth),var(--formation);
+  --tex-cream:var(--fibers-env),var(--tooth),var(--formation);
   --display:"Fraunces",Georgia,serif;
   --body:"Fraunces",Georgia,serif;
   --ui:"Fraunces",Georgia,serif;
@@ -42,11 +58,19 @@
   --sheet:#2A1E19; --sheet-edge:#0E0907; --rule:#3A4452; --margin:color-mix(in srgb,#E59C90 38%,transparent); --binding:#0E0907;
   --folder:#3A2B22; --folder-front:#43332A; --env:#33251F; --env-flap:#3D2D26; --shadow:rgba(0,0,0,.5);
   --c-bg:#291B17; --c-edge:#170F0C; --c-deep:#0C0807; --c-ink:#D3DEEC; --c-dim:#929FB4; --c-stamp:#E59C90;
+  --tooth:url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' width='200' height='200'><filter id='f' x='0' y='0' width='100%25' height='100%25'><feTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='2' seed='1' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 .92  0 0 0 0 .95  0 0 0 0 .98  .3 0 0 0 -.14'/></filter><rect width='100%25' height='100%25' filter='url(%23f)'/></svg>");
+  --tooth-rough:url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' width='200' height='200'><filter id='f' x='0' y='0' width='100%25' height='100%25'><feTurbulence type='fractalNoise' baseFrequency='.7' numOctaves='3' seed='2' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 .92  0 0 0 0 .95  0 0 0 0 .98  .4 0 0 0 -.18'/></filter><rect width='100%25' height='100%25' filter='url(%23f)'/></svg>");
+  --formation:url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' width='400' height='400'><filter id='f' x='0' y='0' width='100%25' height='100%25'><feTurbulence type='fractalNoise' baseFrequency='.025' numOctaves='3' seed='9' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 .92  0 0 0 0 .95  0 0 0 0 .98  .07 0 0 0 -.025'/></filter><rect width='100%25' height='100%25' filter='url(%23f)'/></svg>");
+  --mottle:url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' width='600' height='600'><filter id='f' x='0' y='0' width='100%25' height='100%25'><feTurbulence type='fractalNoise' baseFrequency='.005' numOctaves='4' seed='4' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  .36 0 0 0 -.13'/></filter><rect width='100%25' height='100%25' filter='url(%23f)'/></svg>");
+  --lift:linear-gradient(168deg,rgb(255 255 255/.04),transparent 45%,rgb(0 0 0/.08));
+  --speck:url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' width='160' height='160'><filter id='f' x='0' y='0' width='100%25' height='100%25'><feTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='1' seed='3' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 .1  0 0 0 0 .07  0 0 0 0 .06  .5 0 0 0 -.31'/></filter><rect width='100%25' height='100%25' filter='url(%23f)'/></svg>");
+  --shadow-near:rgba(0,0,0,.35); --crease:rgb(255 255 255/.06); --tear-rim:rgb(255 238 222/.16);
+  --fibers-desk:var(--fib-desk-d,none); --fibers-sheet:var(--fib-sheet-d,none); --fibers-folder:var(--fib-folder-d,none); --fibers-env:var(--fib-env-d,none);
   color-scheme:dark}}
 
 *{box-sizing:border-box}
 html,body{margin:0;height:100%}
-body{background:var(--grain),var(--bg);color:var(--ink);font-family:var(--ui);font-size:15px;line-height:1.5;-webkit-font-smoothing:antialiased;font-synthesis:none}
+body{background:var(--tex-desk),var(--bg);color:var(--ink);font-family:var(--ui);font-size:15px;line-height:1.5;-webkit-font-smoothing:antialiased;font-synthesis:none}
 em,i,cite{font-style:normal}
 .titlebar{position:fixed;inset:0 0 auto 0;height:40px;-webkit-app-region:drag;z-index:5}
 .wrap{max-width:640px;margin:0 auto;padding-inline:28px;padding-block:46px 72px;display:flex;flex-direction:column;gap:26px}
@@ -60,7 +84,7 @@ button,input,select,textarea,nav{-webkit-app-region:no-drag}
 /* masthead: the title in script, with the "29" label pasted over its edge */
 header{display:flex;flex-direction:column;align-items:center;gap:14px;position:relative;z-index:6;padding-bottom:4px;border-bottom:1px solid var(--line)}
 .brand{position:relative;font-family:var(--display);font-weight:300;font-size:46px;line-height:1.05;font-variation-settings:var(--swash);padding:0 4px}
-.brand .mark{position:absolute;left:-22px;top:3px;width:38px;height:25px;background:var(--cream);color:var(--stamp);font-size:15px;font-weight:500;display:grid;place-items:center;box-shadow:0 1px 2px color-mix(in srgb,#2A1A15 28%,transparent);transform:rotate(-3deg)}
+.brand .mark{position:absolute;left:-22px;top:3px;width:38px;height:25px;background:var(--tex-cream),var(--cream);color:var(--stamp);font-size:15px;font-weight:500;display:grid;place-items:center;box-shadow:0 .5px .5px var(--shadow-near),0 2px 4px -1px var(--shadow);transform:rotate(-3deg)}
 nav{display:flex;justify-content:safe center;gap:0;max-width:100%;overflow-x:auto;scrollbar-width:none}
 nav::-webkit-scrollbar{display:none}
 nav button{border:0;background:none;padding:8px 6px;font-size:10.5px;font-weight:600;letter-spacing:.13em;text-transform:uppercase;color:var(--muted);white-space:nowrap}
@@ -104,57 +128,70 @@ textarea::placeholder,input::placeholder{color:var(--muted);opacity:.8}
 
 /* the journal. The day's entry is a sheet on a pad, under a glued binding, with blue rules and a crimson margin.
    Filing tears it off along the perforation (a torn edge, the same for a given day) and drops it into a folder. */
-.pad{position:relative;background:var(--sheet);border-radius:3px 3px 1px 1px;
+.pad{position:relative;background:var(--tex-sheet),var(--sheet);border-radius:3px 3px 1px 1px;
   box-shadow:0 1px 0 var(--sheet-edge),0 3px 0 -1px var(--sheet),0 4px 0 -1px var(--sheet-edge),0 6px 0 -2px var(--sheet),0 7px 0 -2px var(--sheet-edge),0 16px 20px -14px var(--shadow)}
 .pad::before,.leaf::before{content:"";position:absolute;top:0;bottom:0;left:42px;width:1.5px;background:var(--margin);pointer-events:none}
-.binding{position:relative;z-index:2;height:14px;background:var(--binding);border-radius:3px 3px 0 0}
+/* the binding: a strip of book cloth glued over the top of the pad */
+.binding{position:relative;z-index:2;height:14px;background:linear-gradient(rgb(255 255 255/.09),transparent 45%,rgb(0 0 0/.24)),var(--speck-pale),var(--binding);border-radius:3px 3px 0 0;box-shadow:0 1px 0 rgb(0 0 0/.12)}
 .sheet{position:relative;z-index:1;transform-origin:14% 0}
-.leaf{position:relative;background:var(--sheet);padding:14px 24px 18px 60px;display:grid;gap:4px;border-top:1.5px dotted color-mix(in srgb,var(--ink) 30%,transparent)}
+.leaf{position:relative;background:var(--tex-sheet),var(--sheet);padding:14px 24px 18px 60px;display:grid;gap:4px;border-top:1.5px dotted color-mix(in srgb,var(--ink) 30%,transparent)}
 .sheethead{display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;padding-bottom:6px}
 .leaf textarea{background:repeating-linear-gradient(to bottom,transparent 0 31px,var(--rule) 31px 32px);background-attachment:local}
 .sheetfoot{display:grid;gap:12px;margin-top:10px;padding-top:12px;border-top:1px solid var(--rule)}
-.sheet.over .leaf{background:color-mix(in srgb,var(--wash) 45%,var(--sheet))}
+.sheet.over .leaf{background-color:color-mix(in srgb,var(--wash) 45%,var(--sheet))}
 
 /* filed: the torn-off sheet in its folder, under a tab */
-.folder{position:relative;margin-top:24px;background:var(--folder);border-radius:0 4px 3px 3px;padding:18px 16px 0;box-shadow:0 1px 3px var(--shadow)}
-.ftab{position:absolute;bottom:100%;left:0;padding:4px 16px 2px;background:var(--folder);border-radius:5px 5px 0 0;font-size:10.5px;letter-spacing:.16em;text-transform:uppercase;font-weight:650;color:var(--muted);font-variant-numeric:lining-nums}
-.sheetwrap{filter:drop-shadow(0 1px 1.5px var(--shadow))}
+.folder{position:relative;margin-top:24px;background:var(--tex-folder),var(--folder);border-radius:0 4px 3px 3px;padding:18px 16px 0;box-shadow:0 1px 1px var(--shadow-near),0 8px 16px -9px var(--shadow)}
+.ftab{position:absolute;bottom:100%;left:0;padding:4px 16px 2px;background:var(--tex-folder),var(--folder);border-radius:5px 5px 0 0;font-size:10.5px;letter-spacing:.16em;text-transform:uppercase;font-weight:650;color:var(--muted);font-variant-numeric:lining-nums}
+/* a torn edge shows a thin rim of loose fibers, lighter than the paper's face */
+.sheetwrap{filter:drop-shadow(0 -.6px 0 var(--tear-rim)) drop-shadow(0 1px 1.5px var(--shadow))}
+/* torn paper: a ragged strip made for each page (--tear-top, --tear-bottom) masks the paper's edge */
+.leaf.torn,.slip::before{mask-image:var(--tear-top),linear-gradient(#000,#000);mask-size:640px 16px,100% calc(100% - 15px);mask-position:0 0,0 15px;mask-repeat:repeat-x,no-repeat}
 .leaf.filed{border-top:0;padding-top:18px;padding-bottom:58px;gap:8px;transform:rotate(-.35deg)}
 .leaf .read{margin:0;font-family:var(--body);font-weight:var(--write);font-size:20px;line-height:32px;white-space:pre-wrap;overflow-wrap:anywhere;background:repeating-linear-gradient(to bottom,transparent 0 31px,var(--rule) 31px 32px)}
 .leaf .read .ti{color:var(--stamp);font-weight:400}
 /* a page filled in after its day: a date stamp, like "received" on a letter */
-.latestamp{justify-self:end;margin:-2px 0 4px;padding:3px 9px 2px;border:1.5px solid var(--stamp);border-radius:2px;color:var(--stamp);font-size:10px;font-weight:650;letter-spacing:.16em;text-transform:uppercase;font-variant-numeric:lining-nums;transform:rotate(-2.5deg);opacity:.9;white-space:nowrap}
+.latestamp{justify-self:end;margin:-2px 0 4px;padding:3px 9px 2px;border:1.5px solid var(--stamp);border-radius:2px;color:var(--stamp);font-size:10px;font-weight:650;letter-spacing:.16em;text-transform:uppercase;font-variant-numeric:lining-nums;transform:rotate(-2.5deg);opacity:.88;white-space:nowrap;mask-image:var(--ink-mask);mask-size:150px}
 .latenote{margin:0 0 4px}
-.pocket{position:relative;z-index:1;margin:-40px -16px 0;padding:12px 16px;background:var(--folder-front);border-radius:0 0 3px 3px;box-shadow:0 -1px 2px var(--shadow);display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.pocket{position:relative;z-index:1;margin:-40px -16px 0;padding:12px 16px;background:var(--tex-folder),var(--folder-front);border-radius:0 0 3px 3px;box-shadow:0 -1px 2px var(--shadow),inset 0 1px 0 var(--crease);display:flex;align-items:center;gap:10px;flex-wrap:wrap}
 
 /* the envelope: a line from the page (and maybe the photo) for friends. Open, the line sticks out on a slip;
    filing slides it in, folds the flap over and sends it. */
 .mail{position:relative;display:grid;margin-top:30px}
-.slip{position:relative;z-index:1;margin:0 30px -24px;padding:10px 18px 32px;background:var(--sheet);box-shadow:0 1px 2px var(--shadow);display:grid;gap:2px;transform:rotate(-.5deg)}
+.slip{position:relative;z-index:1;isolation:isolate;margin:0 30px -24px;padding:17px 18px 32px;display:grid;gap:2px;transform:rotate(-.5deg);filter:drop-shadow(0 -.6px 0 var(--tear-rim)) drop-shadow(0 1px 1px var(--shadow-near))}
+.slip::before{content:"";position:absolute;inset:0;z-index:-1;background:var(--tex-sheet),var(--sheet)}
 .slip input[type=text]{font-family:var(--body);font-weight:var(--write);font-size:17px;border-bottom-color:var(--rule);padding-top:2px}
-.envelope{position:relative;background:var(--env);box-shadow:0 1px 3px var(--shadow)}
-.envelope .flap{position:absolute;left:0;right:0;bottom:100%;height:34px;background:var(--env-flap);clip-path:polygon(0 100%,50% 0,100% 100%);transform-origin:50% 100%}
-.envelope .flap2{position:absolute;z-index:3;left:0;right:0;top:0;height:40px;background:var(--env-flap);clip-path:polygon(0 0,100% 0,50% 100%);transform-origin:50% 0;transform:scaleY(0);pointer-events:none}
-.envbody{position:relative;z-index:2;background:var(--env);padding:18px 92px 16px 20px;display:grid;gap:8px}
-.stamp{position:absolute;z-index:4;top:12px;right:14px;width:44px;height:50px;display:grid;place-items:center;background:var(--sheet);color:var(--stamp);font-size:15px;font-weight:600;font-variant-numeric:lining-nums;border:3px dotted var(--env);outline:1px solid var(--margin);outline-offset:-8px}
-.postmark{position:absolute;z-index:5;top:12px;right:50px;width:60px;height:60px;border:1.5px solid var(--margin);border-radius:50%;display:grid;place-content:center;text-align:center;font-size:8.5px;line-height:1.3;letter-spacing:.14em;text-transform:uppercase;font-weight:650;color:var(--stamp);opacity:.8;transform:rotate(-14deg);font-variant-numeric:lining-nums}
+.envelope{position:relative;background:var(--tex-env),var(--env);box-shadow:0 1px 1px var(--shadow-near),0 7px 14px -8px var(--shadow)}
+/* the flaps are paper too: cut with a slightly rounded point, with a little shadow under their edges */
+.envelope .flap{position:absolute;left:0;right:0;bottom:100%;height:34px;transform-origin:50% 100%;filter:drop-shadow(0 -.5px .5px var(--shadow-near))}
+.envelope .flap::before{content:"";position:absolute;inset:0;background:var(--tex-env),var(--env-flap);clip-path:polygon(0 100%,48.5% 4%,50% 0,51.5% 4%,100% 100%)}
+.envelope .flap2{position:absolute;z-index:3;left:0;right:0;top:0;height:40px;transform-origin:50% 0;transform:scaleY(0);pointer-events:none;filter:drop-shadow(0 1px 1px var(--shadow-near))}
+.envelope .flap2::before{content:"";position:absolute;inset:0;background:linear-gradient(var(--crease),transparent 4px),var(--tex-env),var(--env-flap);clip-path:polygon(0 0,100% 0,51.5% 95%,50% 100%,48.5% 95%)}
+.envbody{position:relative;z-index:2;background:var(--tex-env),var(--env);padding:18px 92px 16px 20px;display:grid;gap:8px}
+/* the postage stamp: perforated all round (holes punched by the mask), with a printed frame of fine engraved lines */
+.stamp{position:absolute;z-index:4;top:12px;right:14px;width:42px;height:48px;display:grid;place-items:center;color:var(--stamp);font-size:15px;font-weight:600;font-variant-numeric:lining-nums;isolation:isolate;transform:rotate(1.5deg);filter:drop-shadow(0 .5px .6px var(--shadow))}
+.stamp::before{content:"";position:absolute;inset:0;z-index:-2;padding:3px;background:var(--tooth),var(--sheet);mask:linear-gradient(#000 0 0) content-box,radial-gradient(circle,#0000 1.5px,#000 1.9px) -3px -3px/6px 6px}
+.stamp::after{content:"";position:absolute;inset:6px;z-index:-1;border:1px solid var(--margin);background:repeating-linear-gradient(0deg,color-mix(in srgb,var(--stamp) 9%,transparent) 0 1px,transparent 1px 3px)}
+/* rubber-stamped ink (the postmark, "Filled in"): pressed a little unevenly, so the mask lets some paper through */
+.postmark{position:absolute;z-index:5;top:10px;right:44px;width:62px;height:62px;border:1.5px solid currentColor;border-radius:50%;display:grid;place-content:center;text-align:center;font-size:8.5px;line-height:1.3;letter-spacing:.14em;text-transform:uppercase;font-weight:650;color:var(--stamp);opacity:.7;transform:rotate(-14deg);font-variant-numeric:lining-nums;mask-image:var(--ink-mask);mask-size:150px}
+.postmark::before{content:"";position:absolute;inset:3px;border:.75px solid currentColor;border-radius:50%}
 .envelope.sealed .flap2{transform:none}
 .envelope.sealed .envbody{padding:44px 130px 16px 20px}
 .envelope.sealed .say{margin:0;font-family:var(--body);font-weight:var(--write);font-size:17px;line-height:1.5}
 .envelope.sealed .say .ti{color:var(--stamp)}
 .mailnote{margin:0}
 /* a page from an earlier day that was started and never filed: a note pinned to the desk */
-.latepage{display:flex;align-items:center;gap:10px;flex-wrap:wrap;padding:10px 14px;background:var(--cream);box-shadow:0 1px 2px var(--shadow)}
+.latepage{display:flex;align-items:center;gap:10px;flex-wrap:wrap;padding:10px 14px;background:var(--tex-cream),var(--cream);box-shadow:0 1px 1px var(--shadow-near),0 5px 12px -7px var(--shadow)}
 .latepage .hint{color:var(--ink)}
 .row{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
 .core-toggle{display:inline-flex;align-items:center;gap:8px;border:1px solid var(--line);background:none;padding:6px 14px;border-radius:2px;font-size:14px}
-.core-toggle[aria-pressed="true"]{background:var(--cream);border-color:var(--stamp);color:var(--stamp)}
+.core-toggle[aria-pressed="true"]{background:var(--tex-cream),var(--cream);border-color:var(--stamp);color:var(--stamp)}
 .core-toggle svg{width:16px;height:16px}
 .core-toggle[aria-pressed="true"] svg{fill:var(--stamp);stroke:var(--stamp)}
 input[type=text],input[type=number],select,input[type=time],input[type=date]{font:inherit;color:var(--ink);background:transparent;border:0;border-bottom:1px solid var(--line);border-radius:0;padding:7px 2px;width:100%}
 input[type=time],input[type=date]{width:auto}
 input[type=text]:focus-visible,input[type=number]:focus-visible,select:focus-visible,input[type=time]:focus-visible,input[type=date]:focus-visible{outline:none;border-bottom-color:var(--ink);box-shadow:0 1px 0 var(--ink)}
-.save{border:0;background:var(--accent);color:var(--accent-ink);padding:10px 20px;border-radius:2px;font-size:11.5px;font-weight:650;letter-spacing:.16em;text-transform:uppercase}
+.save{border:0;background:var(--speck),var(--accent);color:var(--accent-ink);padding:10px 20px;border-radius:2px;font-size:11.5px;font-weight:650;letter-spacing:.16em;text-transform:uppercase}
 .save:disabled{opacity:.35;cursor:not-allowed}
 .hint{font-size:13px;color:var(--muted)}
 .saved{font-size:13px;color:var(--accent)}
@@ -171,7 +208,7 @@ input[type=text]:focus-visible,input[type=number]:focus-visible,select:focus-vis
 .cell.has .d{font-weight:750}
 .cell .n{font-size:11px;color:var(--muted);font-variant-numeric:lining-nums tabular-nums}
 .cell.has::after{content:"";position:absolute;top:9px;right:9px;width:6px;height:6px;border-radius:50%;background:var(--ink)}
-.cell.core{background:var(--cream);border-color:transparent;box-shadow:0 1px 2px color-mix(in srgb,#2A1A15 22%,transparent)}
+.cell.core{background:var(--tex-cream),var(--cream);border-color:transparent;box-shadow:0 .5px .5px var(--shadow-near),0 2px 4px -1px var(--shadow)}
 .cell.core::after{background:var(--stamp);width:8px;height:8px}
 /* filled in after the day was over: the same dot, hollow */
 .cell.late::after{background:none;box-shadow:inset 0 0 0 1.5px var(--ink)}
@@ -207,7 +244,7 @@ input[type=text]:focus-visible,input[type=number]:focus-visible,select:focus-vis
 .chips{display:flex;flex-wrap:wrap;gap:6px}
 .chip{border:1px solid var(--line);background:none;border-radius:2px;padding:4px 11px;font-size:13px;color:var(--muted)}
 .chip:hover{border-color:var(--ink);color:var(--ink)}
-.chip[aria-pressed="true"]{background:var(--ink);border-color:var(--ink);color:var(--bg)}
+.chip[aria-pressed="true"]{background:var(--speck),var(--ink);border-color:var(--ink);color:var(--bg)}
 .chip.static{cursor:default;padding:1px 8px;font-size:12px;background:none;border-color:var(--hair);color:var(--muted)}
 .chip .x{margin-left:6px;opacity:.7}
 .cal-dim .cell.has:not(.match),.cal-dim .cell:not(.has):not(.blank):not(.future){opacity:.28}
@@ -235,7 +272,7 @@ input[type=date]{justify-self:start}
 .cap .top svg{width:17px;height:17px;flex:none;color:var(--muted)}
 .cap.sealed{border-top-style:dashed;color:var(--muted)}
 .cap.sealed h3{color:var(--ink)}
-.cap.ripe{background:var(--cream);border-top:0;padding:18px 20px;box-shadow:0 1px 3px color-mix(in srgb,#2A1A15 20%,transparent)}
+.cap.ripe{background:var(--tex-cream),var(--cream);border-top:0;padding:18px 20px;box-shadow:0 1px 1px var(--shadow-near),0 6px 14px -8px var(--shadow)}
 .cap.ripe .top svg{color:var(--stamp)}
 .cap .msg{font-family:var(--body);font-weight:var(--write);font-size:19px;line-height:1.55;white-space:pre-wrap;margin:0}
 .cap.reveal{animation:reveal .5s cubic-bezier(.2,.8,.2,1)}
@@ -245,7 +282,7 @@ input[type=date]{justify-self:start}
 .tabdot{display:inline-block;width:5px;height:5px;border-radius:50%;background:var(--stamp);margin-left:5px;vertical-align:middle}
 
 /* last-day curtain */
-.curtain.lastday{background:var(--grain),
+.curtain.lastday{background:var(--tex-desk),
   radial-gradient(90% 55% at 50% 115%,color-mix(in srgb,var(--c-stamp) 24%,transparent),transparent 70%),
   radial-gradient(120% 90% at 50% 15%,var(--c-edge) 0%,var(--c-deep) 75%)}
 .curtain.lastday .big{opacity:.22}
@@ -298,10 +335,12 @@ mark{background:color-mix(in srgb,var(--stamp) 13%,transparent);color:var(--ink)
 .friend .ftop{display:flex;align-items:center;gap:10px}
 .friend h3{margin:0;font-family:var(--display);font-weight:450;font-size:22px;font-variation-settings:var(--swash);min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 /* what a friend sent: a slip from their page */
-.friend .say{margin:0;justify-self:start;max-width:100%;font-family:var(--body);font-weight:var(--write);font-size:18px;line-height:1.5;background:var(--sheet);padding:12px 18px;box-shadow:0 1px 2px var(--shadow);transform:rotate(-.4deg)}
+.friend .say{position:relative;isolation:isolate;margin:0;justify-self:start;max-width:100%;font-family:var(--body);font-weight:var(--write);font-size:18px;line-height:1.5;padding:17px 20px;transform:rotate(-.4deg);filter:drop-shadow(0 -.6px 0 var(--tear-rim)) drop-shadow(0 1px 1px var(--shadow-near))}
+.friend .say::before{content:"";position:absolute;inset:0;z-index:-1;background:var(--tex-sheet),var(--sheet);
+  mask-image:var(--tear-top),var(--tear-bottom),linear-gradient(#000,#000);mask-size:640px 16px,640px 16px,100% calc(100% - 30px);mask-position:0 0,0 100%,0 15px;mask-repeat:repeat-x,repeat-x,no-repeat}
 .friend .say em{color:var(--stamp)}
 .pill{font-size:10px;letter-spacing:.13em;text-transform:uppercase;font-weight:650;border:1px solid var(--line);border-radius:2px;padding:3px 8px;color:var(--muted);white-space:nowrap}
-.pill.done{background:var(--ink);border-color:var(--ink);color:var(--bg)}
+.pill.done{background:var(--speck),var(--ink);border-color:var(--ink);color:var(--bg)}
 .flist{display:grid;gap:10px}
 .fsum{font-family:var(--display);font-weight:400;font-size:20px;margin:0}
 .friendsline{display:flex;justify-content:center;align-items:center;gap:8px 16px;flex-wrap:wrap;width:100%;border:0;background:none;border-radius:0;padding:0;margin-top:-8px;font-size:15px}
@@ -314,7 +353,7 @@ mark{background:color-mix(in srgb,var(--stamp) 13%,transparent);color:var(--ink)
 .warn{color:var(--danger)}
 
 /* birthday curtain: dawn instead of dusk */
-.curtain.birthday{background:var(--grain),
+.curtain.birthday{background:var(--tex-desk),
   radial-gradient(80% 55% at 50% -10%,color-mix(in srgb,var(--c-glow) 55%,transparent),transparent 70%),
   radial-gradient(120% 90% at 50% 25%,var(--c-bg) 0%,var(--c-edge) 75%)}
 .curtain .big.out{opacity:0!important;transform:scale(1.18);filter:blur(14px);transition:opacity .9s ease,transform .9s ease,filter .9s ease}
@@ -323,7 +362,7 @@ mark{background:color-mix(in srgb,var(--stamp) 13%,transparent);color:var(--ink)
 .segs i.drain{background:color-mix(in srgb,var(--c-ink) 14%,transparent)!important;transition:background .35s}
 
 /* milestone curtain */
-.curtain.milestone{background:var(--grain),
+.curtain.milestone{background:var(--tex-desk),
   radial-gradient(70% 55% at 50% 0%,color-mix(in srgb,var(--c-stamp) 16%,transparent),transparent 70%),
   radial-gradient(120% 90% at 50% 20%,var(--c-bg) 0%,var(--c-edge) 70%)}
 .curtain .eyebrow{font-family:var(--display);font-weight:650;font-size:13px;letter-spacing:.24em;text-transform:uppercase;color:var(--c-stamp)}
@@ -341,8 +380,8 @@ mark{background:color-mix(in srgb,var(--stamp) 13%,transparent);color:var(--ink)
 .two{display:grid;grid-template-columns:1fr 1fr;gap:14px}
 
 /* the new-day curtain: a whole sheet of the paper in a printed double rule, the number in ink */
-.curtain{position:fixed;inset:0;z-index:50;background:var(--grain),radial-gradient(120% 90% at 50% 20%,var(--c-bg) 0%,var(--c-edge) 75%);color:var(--c-ink);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:24px;padding:48px 32px;text-align:center;-webkit-app-region:drag;transition:opacity .6s ease, transform .6s ease}
-.curtain::before{content:"";position:absolute;inset:22px;border:3px double color-mix(in srgb,var(--c-ink) 35%,transparent);pointer-events:none}
+.curtain{position:fixed;inset:0;z-index:50;background:var(--tex-desk),radial-gradient(120% 90% at 50% 20%,var(--c-bg) 0%,var(--c-edge) 75%);color:var(--c-ink);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:24px;padding:48px 32px;text-align:center;-webkit-app-region:drag;transition:opacity .6s ease, transform .6s ease}
+.curtain::before{content:"";position:absolute;inset:22px;border:3px double color-mix(in srgb,var(--c-ink) 35%,transparent);pointer-events:none;mask-image:var(--ink-mask);mask-size:150px}
 .curtain.leaving{opacity:0;transform:scale(1.02);pointer-events:none}
 .curtain .date{font-family:var(--ui);font-weight:600;font-size:13px;letter-spacing:.24em;text-transform:uppercase;color:var(--c-dim)}
 .curtain .big{font-family:var(--display);font-weight:200;font-variation-settings:var(--swash);font-size:clamp(150px,32vw,360px);line-height:.9;letter-spacing:-.01em;font-variant-numeric:lining-nums tabular-nums;color:var(--c-ink);opacity:.3;transition:opacity .5s,font-weight 1.1s cubic-bezier(.2,.8,.2,1)}
@@ -532,6 +571,39 @@ mark{background:color-mix(in srgb,var(--stamp) 13%,transparent);color:var(--ink)
 
 <script>
 (() => {
+/* ---------- the paper mill ----------
+   Fibers and flecks for each paper, drawn once as small SVG tiles that repeat: a set for light paper and a quieter set
+   for dark paper (--fib-<paper>-l, -d; the stylesheet picks one as --fibers-<paper>). Each tile has dark fibers and pale
+   ones, like real paper. Fibers that cross a tile's edge are drawn again on the other side, so the tiles join without a seam. */
+const seeded=seed=>{let s=0;for(const ch of String(seed))s=(s*31+ch.charCodeAt(0))>>>0;return ()=>{s=(s*1664525+1013904223)>>>0;return s/4294967296}};
+const svgURL=svg=>`url('data:image/svg+xml,${encodeURIComponent(svg).replace(/'/g,"%27")}')`;
+(function paperMill(){
+  const R=seeded("Day by Day");
+  const tile=(size,n,{len,w,dark,pale,flecks=0})=>{
+    let out="";
+    const fiber=(x,y,mx,my,x2,y2,c,wd,o)=>`<path d='M${x.toFixed(1)} ${y.toFixed(1)}Q${mx.toFixed(1)} ${my.toFixed(1)} ${x2.toFixed(1)} ${y2.toFixed(1)}' stroke='${c}' stroke-width='${wd}' stroke-opacity='${o}'/>`;
+    for(let i=0;i<n;i++){
+      const x=R()*size,y=R()*size,a=R()*Math.PI*2,l=len[0]+R()*(len[1]-len[0]),bend=(R()-.5)*l*.6;
+      const x2=x+Math.cos(a)*l,y2=y+Math.sin(a)*l,mx=(x+x2)/2-Math.sin(a)*bend,my=(y+y2)/2+Math.cos(a)*bend;
+      const [c,op]=R()<.55?dark:pale,wd=(w[0]+R()*(w[1]-w[0])).toFixed(2),o=(op*(.35+R()*.65)).toFixed(3);
+      const near=x<l||y<l||x>size-l||y>size-l;
+      for(const ox of near?[-size,0,size]:[0])for(const oy of near?[-size,0,size]:[0])out+=fiber(x+ox,y+oy,mx+ox,my+oy,x2+ox,y2+oy,c,wd,o);
+    }
+    for(let i=0;i<flecks;i++){const r=.4+R()*.9;
+      out+=`<ellipse cx='${(4+R()*(size-8)).toFixed(1)}' cy='${(4+R()*(size-8)).toFixed(1)}' rx='${r.toFixed(2)}' ry='${(r*(.5+R()*.5)).toFixed(2)}' fill='${dark[0]}' fill-opacity='${(Math.min(1,dark[1]*2.2)*(.4+R()*.6)).toFixed(3)}'/>`}
+    return svgURL(`<svg xmlns='http://www.w3.org/2000/svg' width='${size}' height='${size}'><filter id='s'><feGaussianBlur stdDeviation='.25'/></filter><g filter='url(#s)' fill='none' stroke-linecap='round'>${out}</g></svg>`);
+  };
+  const pale="#FFFDF6",brown="#3B2418",black="#000",root=document.documentElement.style;
+  const papers={
+    desk:  [360,{len:[5,18],w:[.45,.9]},{n:80,dark:["#2C3E58",.2],pale:[pale,.28],flecks:6},{n:45,dark:[black,.3],pale:[pale,.09],flecks:4}],
+    sheet: [320,{len:[4,12],w:[.35,.7]},{n:26,dark:["#5A6E8A",.09],pale:[pale,.22]},{n:18,dark:[black,.2],pale:[pale,.07]}],
+    folder:[300,{len:[4,16],w:[.45,1]},{n:150,dark:[brown,.26],pale:[pale,.28],flecks:26},{n:100,dark:[black,.3],pale:[pale,.12],flecks:18}],
+    env:   [320,{len:[4,14],w:[.4,.8]},{n:50,dark:[brown,.13],pale:[pale,.26],flecks:4},{n:36,dark:[black,.22],pale:[pale,.09],flecks:3}]};
+  for(const[name,[size,shape,light,dark]]of Object.entries(papers)){
+    root.setProperty(`--fib-${name}-l`,tile(size,light.n,{...shape,...light}));
+    root.setProperty(`--fib-${name}-d`,tile(size,dark.n,{...shape,...dark}));
+  }
+})();
 const MONTHS=["January","February","March","April","May","June","July","August","September","October","November","December"];
 const MON=MONTHS.map(m=>m.slice(0,3));
 const WEEK=["Sunday","Monday","Tuesday","Wednesday","Thursday","Friday","Saturday"];
@@ -852,12 +924,22 @@ document.addEventListener("dragover",e=>{if(hasFiles(e)&&!e.defaultPrevented){e.
 document.addEventListener("drop",e=>{if(hasFiles(e))e.preventDefault()});
 
 const pageDate=k=>longDate(k)+(parseKey(k)[0]!==parseKey(todayKey())[0]?`, ${parseKey(k)[0]}`:"");
-// the edge a sheet tears along. Seeded by the date, so a day's page always tears the same way.
-function tornEdge(k){
-  let s=0;for(const ch of k)s=(s*31+ch.charCodeAt(0))>>>0;
-  const rnd=()=>{s=(s*1664525+1013904223)>>>0;return s/4294967296};
-  const pts=[];for(let x=0;x<=100;x+=1.25)pts.push(`${x}% ${(1+rnd()*5).toFixed(1)}px`);
-  return `polygon(${pts.join(",")},100% 100%,0 100%)`;
+// The edge a sheet tears along, as a strip that masks the paper's edge (see .torn). Seeded, so a day's page always tears
+// the same way. The line wanders slowly and jitters finely, the fibers it pulls loose stick out past it, and a little
+// noise frays it. It starts and ends at the same height, so strips repeat along a wide edge. flip: paper above the line.
+const tears=new Map();
+function tearStrip(seed,flip){
+  const key=seed+(flip?"^":"");if(tears.has(key))return tears.get(key);
+  const R=seeded(key),W=640,H=16;
+  const wander=Array.from({length:17},R),fine=Array.from({length:81},R);wander[16]=wander[0];fine[80]=fine[0];
+  const at=(a,step,x)=>{const i=Math.min(Math.floor(x/step),a.length-2),t=x/step-i,u=(1-Math.cos(t*Math.PI))/2;return a[i]*(1-u)+a[i+1]*u};
+  const line=[];for(let x=0;x<=W;x+=2)line.push([x,3+at(wander,40,x)*5+at(fine,8,x)*2+R()*.8]);
+  const edge=`M0 ${H}`+line.map(([x,y])=>`L${x} ${y.toFixed(2)}`).join("")+`L${W} ${H}Z`;
+  let loose="";for(let i=0;i<80;i++){const[x,y]=line[Math.floor(R()*line.length)],l=1.2+R()*3.4,a=-Math.PI/2+(R()-.5)*1.8;
+    loose+=`M${x.toFixed(1)} ${(y+.8).toFixed(1)}l${(Math.cos(a)*l).toFixed(1)} ${(Math.sin(a)*l).toFixed(1)}`}
+  const url=svgURL(`<svg xmlns='http://www.w3.org/2000/svg' width='${W}' height='${H}'><filter id='r' x='-1%' y='-40%' width='102%' height='180%'><feTurbulence type='fractalNoise' baseFrequency='.55' numOctaves='2' seed='${Math.floor(R()*999)}'/><feDisplacementMap in='SourceGraphic' scale='2.2' xChannelSelector='R' yChannelSelector='G'/><feGaussianBlur stdDeviation='.28'/></filter>`+
+    `<g filter='url(#r)'${flip?` transform='matrix(1 0 0 -1 0 ${H})'`:""}><path d='${edge}'/><path d='${loose}' fill='none' stroke='#000' stroke-width='.45' stroke-opacity='.6'/></g></svg>`);
+  tears.set(key,url);return url;
 }
 const wait=ms=>new Promise(r=>setTimeout(r,ms));
 function anim(el,kf,o={}){
@@ -877,7 +959,7 @@ async function tearAndFile(id,k,sending){
   if(!leaf||reduced())return;
   const F={fill:"forwards"},sh=shadowColor(),pad=$(id+"-pad"),mail=$(id+"-mail"),acts=$(id+"-actions");
   if(document.activeElement&&hostOf(id).contains(document.activeElement))document.activeElement.blur();
-  leaf.style.clipPath=tornEdge(k);
+  leaf.style.setProperty("--tear-top",tearStrip(k));leaf.classList.add("torn");
   await anim(sheet,[{transform:"none"},{transform:"translateY(4px) rotate(-1.6deg)"}],{...F,duration:190,easing:"cubic-bezier(.3,0,.5,1)"});
   const drop=anim(sheet,[
       {transform:"translateY(4px) rotate(-1.6deg)",opacity:1,filter:`drop-shadow(0 2px 3px ${sh})`},
@@ -904,7 +986,7 @@ const hostOf=id=>id==="t"?$("todayEntry"):$("calDetail");
 function folderHTML(k,pocket){
   const d=days[k],[,m,dd]=parseKey(k);
   return `<div class="folder"><span class="ftab">${MON[m-1]} ${dd}</span>
-    <div class="sheetwrap"><div class="leaf filed" style="clip-path:${tornEdge(k)}">
+    <div class="sheetwrap"><div class="leaf filed torn" style="--tear-top:${tearStrip(k)}">
       <div class="sheethead"><span class="label">${esc(pageDate(k))}</span><span class="label">Day ${countFor(k)}</span></div>
       ${lateStamp(k)}
       ${d.core?`<div class="coreline">${STAR}<span>${esc(d.coreTitle||"Core memory")}</span></div>`:""}
@@ -990,7 +1072,7 @@ function buildEditor(host,k,isToday){
       </div></div>
     </div>
     ${withShare?`<div class="mail" id="${id}-mail">
-      <div class="slip" id="${id}-slip"${s0.shLine?"":" hidden"}><span class="label">Today I…</span><input type="text" id="${id}-snip" maxlength="280" placeholder="the part your friends read" aria-label="Line to send to friends"></div>
+      <div class="slip" id="${id}-slip" style="--tear-top:${tearStrip(k+":slip")}"${s0.shLine?"":" hidden"}><span class="label">Today I…</span><input type="text" id="${id}-snip" maxlength="280" placeholder="the part your friends read" aria-label="Line to send to friends"></div>
       <div class="envelope"><i class="flap" aria-hidden="true"></i>
         <div class="envbody">
           <div><div class="label">To your friends</div><div class="hint">They see that you wrote${isToday?" today":" this day"}. Nothing from the page goes to them unless you put it in here.</div></div>
@@ -1689,7 +1771,7 @@ function friendCard(f){
   return `<div class="paper friend">
     <div class="ftop"><h3 class="grow">${esc(f.name)}</h3><span class="pill${done?" done":""}">${done?"Wrote today":p?`Last wrote ${relDay(p.day)}`:"Hasn't written yet"}</span></div>
     ${meta?`<div class="hint">${meta}</div>`:""}
-    ${p&&p.snippet?`<p class="say"><em>Today I</em> ${esc(p.snippet)}</p>`:""}
+    ${p&&p.snippet?`<p class="say" style="--tear-top:${tearStrip(f.id+p.day)};--tear-bottom:${tearStrip(f.id+p.day,true)}"><em>Today I</em> ${esc(p.snippet)}</p>`:""}
     ${p&&p.photo?`<img class="thumb" data-fphoto="${esc(p.photo)}" data-v="${esc(p.updatedAt)}" alt="${esc(f.name)}'s journal page">`:""}
     <div><button class="linkbtn" data-unfriend="${esc(f.id)}">Remove</button></div>
   </div>`;

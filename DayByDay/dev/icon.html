@@ -1,0 +1,41 @@
+<!doctype html><html><head><meta charset="utf-8">
+<!-- The app icon: the pale blue paper with the cream "29" label pasted on. dev/make-icon.sh renders it to source/icon.png and source/icon.icns. -->
+<style>
+@font-face{font-family:"Fraunces";src:url("../source/fonts/fraunces-latin-full-normal.woff2") format("woff2");font-weight:100 900}
+html,body{margin:0;width:1024px;height:1024px;background:transparent;overflow:hidden}
+/* the macOS grid: an 824px rounded square centered on the 1024 canvas */
+.tile{position:absolute;left:100px;top:100px;width:824px;height:824px;border-radius:185px;overflow:hidden;
+  background:
+    var(--fibers),
+    url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' width='412' height='412'><filter id='f' x='0' y='0' width='100%25' height='100%25'><feTurbulence type='fractalNoise' baseFrequency='.32' numOctaves='3' seed='3' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 .17  0 0 0 0 .2  0 0 0 0 .3  .5 0 0 0 -.22'/></filter><rect width='100%25' height='100%25' filter='url(%23f)'/></svg>"),
+    url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' width='824' height='824'><filter id='f' x='0' y='0' width='100%25' height='100%25'><feTurbulence type='fractalNoise' baseFrequency='.004' numOctaves='4' seed='8' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 .17  0 0 0 0 .2  0 0 0 0 .3  .3 0 0 0 -.1'/></filter><rect width='100%25' height='100%25' filter='url(%23f)'/></svg>"),
+    linear-gradient(165deg,#E8EFF8 0%,#D9E3F0 55%,#C9D5E5 100%);
+  box-shadow:inset 0 0 0 2px rgb(42 26 21/.08),inset 0 3px 0 rgb(255 255 255/.5)}
+.wrap{position:absolute;inset:0;filter:drop-shadow(0 10px 14px rgb(30 40 60/.28)) drop-shadow(0 2px 3px rgb(30 40 60/.18))}
+/* a printed double rule, inked a little unevenly */
+.rule{position:absolute;inset:58px;border:7px double rgb(42 26 21/.3);border-radius:132px;
+  mask-image:url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' width='300' height='300'><filter id='f' x='0' y='0' width='100%25' height='100%25'><feTurbulence type='fractalNoise' baseFrequency='.03' numOctaves='3' seed='5' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  3 0 0 0 -.4'/></filter><rect width='100%25' height='100%25' filter='url(%23f)'/></svg>")}
+/* the cream label, pasted on at a tilt */
+.label{position:absolute;left:112px;top:200px;width:600px;height:424px;transform:rotate(-4deg);
+  background:
+    var(--fibers-label),
+    url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' width='300' height='300'><filter id='f' x='0' y='0' width='100%25' height='100%25'><feTurbulence type='fractalNoise' baseFrequency='.3' numOctaves='3' seed='6' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 .2  0 0 0 0 .13  0 0 0 0 .08  .55 0 0 0 -.24'/></filter><rect width='100%25' height='100%25' filter='url(%23f)'/></svg>"),
+    url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' width='524' height='524'><filter id='f' x='0' y='0' width='100%25' height='100%25'><feTurbulence type='fractalNoise' baseFrequency='.008' numOctaves='3' seed='2' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 .2  0 0 0 0 .13  0 0 0 0 .08  .22 0 0 0 -.08'/></filter><rect width='100%25' height='100%25' filter='url(%23f)'/></svg>"),
+    linear-gradient(168deg,#F4EFE2,#EAE2CF);
+  box-shadow:0 3px 2px rgb(42 26 21/.16),0 22px 30px -14px rgb(42 26 21/.4);
+  display:grid;place-items:center}
+.num{font-family:"Fraunces";font-weight:520;font-size:368px;line-height:1;letter-spacing:-.01em;color:#93302A;font-variation-settings:"SOFT" 0,"WONK" 0;font-variant-numeric:lining-nums;margin-top:-18px;
+  mask-image:url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' width='260' height='260'><filter id='f' x='0' y='0' width='100%25' height='100%25'><feTurbulence type='fractalNoise' baseFrequency='.05' numOctaves='3' seed='5' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  2.4 0 0 0 .1' result='b'/><feTurbulence type='fractalNoise' baseFrequency='.5' numOctaves='1' seed='9' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  -8 0 0 0 7.6' result='s'/><feComposite in='b' in2='s' operator='arithmetic' k1='1'/></filter><rect width='100%25' height='100%25' filter='url(%23f)'/></svg>")}
+</style></head><body>
+<div class="wrap"><div class="tile"><div class="rule"></div><div class="label"><div class="num">29</div></div></div></div>
+<script>
+// big fibers for a big canvas (the icon is shrunk down a lot in the Dock)
+let s=29;const R=()=>{s=(s*1664525+1013904223)>>>0;return s/4294967296};
+function tile(size,n,len,w,cols){let out="";for(let i=0;i<n;i++){const x=R()*size,y=R()*size,a=R()*6.283,l=len[0]+R()*(len[1]-len[0]),b=(R()-.5)*l*.6,
+  x2=x+Math.cos(a)*l,y2=y+Math.sin(a)*l,mx=(x+x2)/2-Math.sin(a)*b,my=(y+y2)/2+Math.cos(a)*b,[c,o]=cols[R()<.55?0:1];
+  for(const ox of [-size,0,size])for(const oy of [-size,0,size])out+=`<path d='M${x+ox} ${y+oy}Q${mx+ox} ${my+oy} ${x2+ox} ${y2+oy}' stroke='${c}' stroke-opacity='${(o*(.4+R()*.6)).toFixed(2)}' stroke-width='${(w[0]+R()*(w[1]-w[0])).toFixed(1)}'/>`}
+  return `url("data:image/svg+xml,${encodeURIComponent(`<svg xmlns='http://www.w3.org/2000/svg' width='${size}' height='${size}'><filter id='b'><feGaussianBlur stdDeviation='.6'/></filter><g filter='url(#b)' fill='none' stroke-linecap='round'>${out}</g></svg>`)}")`}
+document.body.style.setProperty("--fibers",tile(412,20,[16,40],[1.4,2.4],[["#2C3E58",.2],["#FFFFFF",.4]]));
+document.body.style.setProperty("--fibers-label",tile(300,10,[12,30],[1.2,2],[["#5A3A25",.14],["#FFFFFF",.35]]));
+</script>
+</body></html>
