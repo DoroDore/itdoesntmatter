@@ -16,6 +16,8 @@ do $$ begin begin insert into public.posts (user_id, day, photo_path) values ('a
 
 do $$ begin begin insert into public.posts (user_id, day, snippet) values ('aaaaaaaa-0000-0000-0000-000000000000', '2026-11-05', repeat('x', 281)); raise exception 'FAIL: 281-char snippet accepted'; exception when check_violation then raise notice 'PASS: snippet capped at 280'; end; end $$;
 
+do $$ begin begin insert into public.posts (user_id, day, streak_late) values ('aaaaaaaa-0000-0000-0000-000000000000', '2026-11-04', -1); raise exception 'FAIL: negative streak_late accepted'; exception when check_violation then raise notice 'PASS: streak_late is checked'; end; end $$;
+
 do $$ begin begin update public.profiles set name = 'Hacked' where true; raise exception 'FAIL: direct profile update allowed'; exception when insufficient_privilege then raise notice 'PASS: profiles only change through save_profile'; end; end $$;
 
 do $$ begin begin insert into public.friendships (requester, addressee, accepted) values ('aaaaaaaa-0000-0000-0000-000000000000', 'bbbbbbbb-0000-0000-0000-000000000000', true); raise exception 'FAIL: A forced a friendship'; exception when insufficient_privilege then raise notice 'PASS: friendships only change through functions'; end; end $$;
@@ -53,6 +55,8 @@ select pg_temp.as_user('bbbbbbbb-0000-0000-0000-000000000000');
 do $$ declare j json; begin j := public.my_friends(); assert json_array_length(j) = 1 and j->0->>'state' = 'received' and json_array_length(j->0->'posts') = 0, 'FAIL: pending view ' || j::text; assert (select count(*) from public.posts where user_id = 'aaaaaaaa-0000-0000-0000-000000000000') = 0, 'FAIL: pending request shows posts'; raise notice 'PASS: B sees the request from A, but not A''s posts yet'; end $$;
 
 do $$ declare j json; begin perform public.accept_friend('aaaaaaaa-0000-0000-0000-000000000000'); j := public.my_friends(); assert j->0->>'state' = 'friends', 'FAIL: not friends'; assert j->0->'posts'->0->>'snippet' = 'went to the farmers market', 'FAIL: snippet ' || j::text; assert (select count(*) from storage.objects) = 1, 'FAIL: friend cannot see photo'; raise notice 'PASS: after accepting, B sees A''s post and photo: %', j; end $$;
+
+do $$ declare j json; begin j := public.my_friends(); assert j->0->'posts'->0->>'filed_late' = 'false' and j->0->'posts'->0->>'streak_late' = '0', 'FAIL: late marks missing ' || j::text; raise notice 'PASS: friends see whether a day was filled in later'; end $$;
 
 do $$ begin begin delete from public.posts where user_id = 'aaaaaaaa-0000-0000-0000-000000000000'; assert (select count(*) from public.posts where user_id = 'aaaaaaaa-0000-0000-0000-000000000000') = 1, 'FAIL: B deleted A''s post'; raise notice 'PASS: friends can read but not delete your posts'; end; end $$;
 

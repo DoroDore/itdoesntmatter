@@ -45,6 +45,11 @@ create table if not exists public.posts (
   check (photo_path is null or photo_path = user_id::text || '/' || to_char(day, 'YYYY-MM-DD') || '.jpg')
 );
 create index if not exists posts_photo_path on public.posts (photo_path) where photo_path is not null;
+-- Filling in a missed day is allowed, and marked: filed_late says this day's page was first filed after noon the
+-- next day, and streak_late is how many days of the streak ending here were filled in like that.
+-- (Added after the first version, so they're added here rather than in create table.)
+alter table public.posts add column if not exists filed_late boolean not null default false;
+alter table public.posts add column if not exists streak_late int not null default 0 check (streak_late between 0 and 60000);
 
 -- 2. Who can see what ---------------------------------------------------------------------------
 -- Everything is read through row-level security. Writes go through the functions below,
@@ -200,7 +205,7 @@ language sql stable security invoker set search_path = '' as $$
                 when f.requester = auth.uid() then 'sent'
                 else 'received' end as state,
            (select coalesce(json_agg(q order by q.day desc), '[]'::json)
-              from (select po.day, po.count, po.streak, po.snippet, po.photo_path, po.updated_at
+              from (select po.day, po.count, po.streak, po.filed_late, po.streak_late, po.snippet, po.photo_path, po.updated_at
                       from public.posts po
                      where po.user_id = p.id and f.accepted
                      order by po.day desc
@@ -276,3 +281,6 @@ create policy "daybyday: see your photos and the ones friends share" on storage.
 
 -- the first version gave friends the whole folder through this
 drop function if exists public.is_friend_folder(text);
+
+-- so the API sees new columns right away
+notify pgrst, 'reload schema';

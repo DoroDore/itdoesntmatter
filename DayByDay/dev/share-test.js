@@ -203,6 +203,17 @@ const rejects = async (p, code, msg) => { try { await p; ok(false, msg + " (did 
     await ana.flush();
     ok(ana.status().unsent === 0 && Object.values(server.posts).some((p) => p.day === "2026-11-08"), "back online: the outbox sends");
 
+    // a missed day filled in later is marked as such
+    let bp = (await ben.friends())[0].posts.find((p) => p.day === "2026-11-08");
+    ok(bp && bp.late === false && bp.streakLate === 0, "a day filed on time isn't marked");
+    await ana.push({ day: "2026-11-06", count: 312, streak: 3, late: true, streakLate: 1 });
+    await ana.push({ day: "2026-11-08", count: 314, streak: 5, streakLate: 9 });
+    const bposts = (await ben.friends())[0].posts;
+    bp = bposts.find((p) => p.day === "2026-11-06");
+    ok(bp && bp.late === true && bp.streakLate === 1, "Ben sees that Ana filled in Nov 6 later");
+    bp = bposts.find((p) => p.day === "2026-11-08");
+    ok(bp && bp.late === false && bp.streakLate === 5, "the count of filled-in days never exceeds the streak");
+
     for (const k in server.access) delete server.access[k]; // every access token expires
     af = await ana.friends();
     ok(af.length === 1, "an expired token is refreshed and the call retried");

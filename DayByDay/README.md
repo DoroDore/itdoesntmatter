@@ -18,6 +18,7 @@ Run the installer again whenever the code in `source/` changes. Your entries are
 - To change it, press **Take it out**, edit it, and file it again. **Put it back unchanged** returns it as it was.
 - A sheet you haven't filed keeps everything on it (words, tags, star, photo, envelope), even if you quit. If you were still writing at midnight, Today shows a note that yesterday's page hasn't been filed; **Finish it** opens it.
 - Past days are filed in the **Calendar**. Click one to read it, or to fill in a day you missed.
+- **Filling in a missed day** counts toward your streak, and it's marked. A page first filed after noon the next day gets a "Filled in Nov 20" stamp and a hollow dot on the calendar. Your streak on Today says how many of its days were filled in, and friends see that too. Writing just past midnight is still on time. Editing a page later doesn't change when it was filed.
 
 ## Paper journals
 
@@ -32,7 +33,7 @@ If you write on paper, click **Add a photo of your paper journal** under "Today 
 Open the **Friends** tab, type your name and press **Turn on Friends**. You get a six-character friend code.
 
 - **Connecting:** send your code to a friend. When they add it and you accept, or you add theirs, you see each other. Friends of friends don't see you.
-- **What friends always see:** whether you've written each day, and your streak.
+- **What friends always see:** whether you've written each day, and your streak, including how many of its days you filled in later.
 - **What they see only if you choose:**
   - In the envelope under each page, **Put a line from this page in the envelope** and **Put the photo in too**. Both are off unless you turn them on for that page, and they go out when you file it.
     - The line is up to 280 characters. It starts as the words you selected on the page, or your first sentence if nothing is selected, and you can edit it.
@@ -51,7 +52,7 @@ Leave Friends needs a working sign-in, because that's what proves the shares are
 Friends runs on a free [Supabase](https://supabase.com) project that everyone in the group shares.
 
 1. Create a project at supabase.com. The free plan is enough.
-2. **SQL Editor → New query**: paste all of `supabase/setup.sql` and press **Run**. It's safe to run again later.
+2. **SQL Editor → New query**: paste all of `supabase/setup.sql` and press **Run**. It's safe to run again, and you should run it again whenever Day by Day is updated, because new versions can add to it.
 3. **Authentication → Sign In / Providers**: turn on **Allow anonymous sign-ins**. People join with just a name and a friend code, with no email or password.
 4. **Project Settings → API**: copy the **Project URL** and the **anon public** key into `source/share-config.json`:
    ```json

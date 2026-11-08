@@ -89,6 +89,7 @@ nav button[aria-selected="true"]{color:var(--ink);box-shadow:inset 0 -2px 0 var(
 .stats{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));border-top:1px solid var(--line);border-bottom:1px solid var(--line)}
 .stat{display:flex;flex-direction:column;align-items:center;gap:0;padding:12px 6px 8px;text-align:center}
 .stat+.stat{border-left:1px solid var(--hair)}
+.statnote{font-size:11px;color:var(--muted);margin-top:-2px}
 .stat b{display:block;font-family:var(--display);font-size:34px;line-height:1.15;font-weight:650;font-variation-settings:var(--swash);font-variant-numeric:lining-nums tabular-nums}
 
 /* entry: a ruled sheet on a pad */
@@ -121,6 +122,9 @@ textarea::placeholder,input::placeholder{color:var(--muted);opacity:.8}
 .leaf.filed{border-top:0;padding-top:18px;padding-bottom:58px;gap:8px;transform:rotate(-.35deg)}
 .leaf .read{margin:0;font-family:var(--body);font-weight:var(--write);font-size:20px;line-height:32px;white-space:pre-wrap;overflow-wrap:anywhere;background:repeating-linear-gradient(to bottom,transparent 0 31px,var(--rule) 31px 32px)}
 .leaf .read .ti{color:var(--stamp);font-weight:400}
+/* a page filled in after its day: a date stamp, like "received" on a letter */
+.latestamp{justify-self:end;margin:-2px 0 4px;padding:3px 9px 2px;border:1.5px solid var(--stamp);border-radius:2px;color:var(--stamp);font-size:10px;font-weight:650;letter-spacing:.16em;text-transform:uppercase;font-variant-numeric:lining-nums;transform:rotate(-2.5deg);opacity:.9;white-space:nowrap}
+.latenote{margin:0 0 4px}
 .pocket{position:relative;z-index:1;margin:-40px -16px 0;padding:12px 16px;background:var(--folder-front);border-radius:0 0 3px 3px;box-shadow:0 -1px 2px var(--shadow);display:flex;align-items:center;gap:10px;flex-wrap:wrap}
 
 /* the envelope: a line from the page (and maybe the photo) for friends. Open, the line sticks out on a slip;
@@ -169,6 +173,10 @@ input[type=text]:focus-visible,input[type=number]:focus-visible,select:focus-vis
 .cell.has::after{content:"";position:absolute;top:9px;right:9px;width:6px;height:6px;border-radius:50%;background:var(--ink)}
 .cell.core{background:var(--cream);border-color:transparent;box-shadow:0 1px 2px color-mix(in srgb,#2A1A15 22%,transparent)}
 .cell.core::after{background:var(--stamp);width:8px;height:8px}
+/* filled in after the day was over: the same dot, hollow */
+.cell.late::after{background:none;box-shadow:inset 0 0 0 1.5px var(--ink)}
+.cell.core.late::after{box-shadow:inset 0 0 0 1.5px var(--stamp)}
+.legend i.ring{box-shadow:inset 0 0 0 1.5px var(--ink)}
 .cell.today{border:1.5px solid var(--ink)}
 .cell.sel{outline:1.5px solid var(--stamp);outline-offset:2px}
 .cell.bday .n{color:var(--stamp);font-weight:600}
@@ -397,7 +405,7 @@ mark{background:color-mix(in srgb,var(--stamp) 13%,transparent);color:var(--ink)
     </div>
     <div class="stats">
       <div class="stat"><span class="label">Days logged</span><b id="sLogged">0</b></div>
-      <div class="stat"><span class="label">Streak</span><b id="sStreak">0</b></div>
+      <div class="stat"><span class="label">Streak</span><b id="sStreak">0</b><span class="statnote" id="sStreakNote"></span></div>
       <div class="stat"><span class="label">Core memories</span><b id="sCore">0</b></div>
     </div>
     <button class="friendsline" id="friendsLine" hidden></button>
@@ -417,7 +425,7 @@ mark{background:color-mix(in srgb,var(--stamp) 13%,transparent);color:var(--ink)
     </div>
     <div class="row"><span class="label">Show</span><div class="chips grow" id="calFilter"></div><button class="ghost" id="randomBtn2">Random day</button></div>
     <div class="grid" id="calGrid"></div>
-    <div class="legend"><span><i style="background:var(--accent)"></i>Entry written</span><span><i style="background:var(--stamp)"></i>Core memory</span><span>Small number = day count</span></div>
+    <div class="legend"><span><i style="background:var(--accent)"></i>Entry written</span><span><i class="ring"></i>Filled in later</span><span><i style="background:var(--stamp)"></i>Core memory</span><span>Small number = day count</span></div>
     <div class="detail entry" id="calDetail"></div>
   </section>
 
@@ -607,6 +615,15 @@ const hasPhoto=k=>!!(days[k]&&days[k].photo);
 const hasEntry=k=>hasText(k)||hasPhoto(k); // a photo of a paper journal counts as writing
 const isCore=k=>hasEntry(k)&&!!days[k].core;
 function streakAt(k){let t=kdn(k),s=0;while(hasEntry(fromDn(t))){s++;t--}return s}
+// Filling in a missed day is allowed, and marked. A page is on time if it's first filed by noon the next day (so writing
+// just past midnight isn't late); after that it's stamped with the day it was filled in. It still counts for the streak.
+// Pages filed before 1.9 have no filedAt and read as on time.
+const lateAfter=k=>{const[y,m,d]=parseKey(k);return new Date(y,m-1,d+1,12).getTime()};
+const filedLate=k=>hasEntry(k)&&!!days[k].filedAt&&days[k].filedAt>lateAfter(k);
+const filedOn=k=>{const t=new Date(days[k].filedAt);return keyOf(t.getFullYear(),t.getMonth()+1,t.getDate())};
+function lateInStreak(k){let t=kdn(k),n=0;while(hasEntry(fromDn(t))){if(filedLate(fromDn(t)))n++;t--}return n}
+const shortOn=(on,k)=>{const[y,m,d]=parseKey(on);return `${MON[m-1]} ${d}`+(y!==parseKey(k)[0]?`, ${y}`:"")}; // the year only if it differs from the page's
+const lateStamp=k=>filedLate(k)?`<span class="latestamp" title="This page was filled in after the day was over.">Filled in ${shortOn(filedOn(k),k)}</span>`:"";
 function streak(){const t=kdn(todayKey());return streakAt(fromDn(hasEntry(todayKey())?t:t-1))}
 function lastAcked(){const tk=todayKey();const ks=Object.keys(days).filter(k=>days[k].acked&&k<tk).sort();return ks.length?ks[ks.length-1]:null}
 const validText=t=>t.trim().split(/\s+/).filter(Boolean).length>=2;
@@ -744,7 +761,9 @@ function renderToday(){
   $("statusText").textContent=statusFor(n);
   $("statusRow").hidden=settings.showStatus===false;
   $("sLogged").textContent=Object.keys(days).filter(hasEntry).length;
-  $("sStreak").textContent=streak();
+  const st=streak(),stLate=st?lateInStreak(hasEntry(k)?k:fromDn(kdn(k)-1)):0;
+  $("sStreak").textContent=st;
+  $("sStreakNote").textContent=stLate?`${stLate} filled in later`:"";
   $("sCore").textContent=Object.keys(days).filter(isCore).length;
   const host=$("todayEntry");
   if(host.dataset.built!==k)buildToday(host,k);
@@ -776,7 +795,7 @@ function renderOTD(){
   const k=todayKey(),[y,m,d]=parseKey(k);
   const past=Object.keys(days).filter(x=>{const[py,pm,pd]=parseKey(x);return py<y&&pm===m&&pd===d&&hasEntry(x)}).sort().reverse();
   $("otdList").innerHTML=past.length?past.map(x=>{const yrs=y-parseKey(x)[0];const e=days[x];return `<div class="otd-item">
-      <span class="when">${yrs} year${yrs===1?"":"s"} ago · ${fmtDate(x)} · day ${countFor(x)}${e.core?" · ★ core memory":""}</span>
+      <span class="when">${yrs} year${yrs===1?"":"s"} ago · ${fmtDate(x)} · day ${countFor(x)}${e.core?" · ★ core memory":""}${filedLate(x)?" · filled in later":""}</span>
       ${hasText(x)?`<p><em>Today I</em> ${esc(e.text)}</p>`:""}${photoTag(e.photo)}${chipsStatic(tagsOf(x))}</div>`}).join("")
     :`<p class="hint" style="margin:0">Nothing from ${MONTHS[m-1]} ${d} in earlier years yet. Next year, today's entry shows up here.</p>`;
   hydratePhotos($("otdList"));
@@ -887,6 +906,7 @@ function folderHTML(k,pocket){
   return `<div class="folder"><span class="ftab">${MON[m-1]} ${dd}</span>
     <div class="sheetwrap"><div class="leaf filed" style="clip-path:${tornEdge(k)}">
       <div class="sheethead"><span class="label">${esc(pageDate(k))}</span><span class="label">Day ${countFor(k)}</span></div>
+      ${lateStamp(k)}
       ${d.core?`<div class="coreline">${STAR}<span>${esc(d.coreTitle||"Core memory")}</span></div>`:""}
       ${hasText(k)?`<p class="read"><span class="ti">Today I</span> ${esc(d.text)}</p>`:""}
       ${photoTag(d.photo)}${chipsStatic(tagsOf(k))}
@@ -956,6 +976,7 @@ function buildEditor(host,k,isToday){
       <div class="binding" aria-hidden="true"></div>
       <div class="sheet" id="${id}-paper"><div class="leaf">
         <div class="sheethead"><span class="label">${esc(pageDate(k))}</span><span class="label">Day ${countFor(k)}</span></div>
+        ${filedLate(k)?lateStamp(k):!hasEntry(k)&&Date.now()>lateAfter(k)?`<p class="hint latenote">This day is over, so the page will be stamped “Filled in ${shortOn(todayKey(),k)}”. It still counts toward your streak.</p>`:""}
         <div class="prefix">Today I…</div>
         <textarea id="${id}-text" aria-label="Today I"></textarea>
         ${withPhoto?`<div class="photoslot" id="${id}-photo"></div>`:""}
@@ -1063,7 +1084,8 @@ function buildEditor(host,k,isToday){
     const tags=sortTags([...$(id+"-tags").querySelectorAll('.chip[aria-pressed="true"]')].map(b=>b.dataset.tag));
     const share=withShare?{line:$(id+"-shLine").checked?clip($(id+"-snip").value.trim(),280):"",photo:!!photo&&$(id+"-shPhoto").checked}:days[k]?.share;
     const was=hasEntry(k);
-    days[k]={...(days[k]||{}),text:ta.value.trim(),tags,core,coreTitle:core?tt.value.trim():"",photo,n:countFor(k),updatedAt:Date.now(),...(share?{share}:{})};
+    const filedAt=days[k]?.filedAt||(was?null:Date.now()); // when the page was first filed; editing it later doesn't change it
+    days[k]={...(days[k]||{}),text:ta.value.trim(),tags,core,coreTitle:core?tt.value.trim():"",photo,n:countFor(k),updatedAt:Date.now(),...(filedAt?{filedAt}:{}),...(share?{share}:{})};
     ui.del("draft:"+k);sheetsOut.delete(k);
     persist();
     pushShare(k);
@@ -1098,11 +1120,11 @@ function renderCal(){
   for(let i=0;i<first;i++)h+=`<div class="cell blank"></div>`;
   for(let d=1;d<=len;d++){
     const k=keyOf(y,m,d),fut=k>tk,cls=["cell"];
-    if(hasEntry(k))cls.push("has");if(isCore(k))cls.push("core");
+    if(hasEntry(k))cls.push("has");if(isCore(k))cls.push("core");if(filedLate(k))cls.push("late");
     if(calTag&&hasEntry(k)&&(days[k].tags||[]).includes(calTag))cls.push("match");
     if(k===tk)cls.push("today");if(k===selKey)cls.push("sel");if(fut)cls.push("future");
     if(m===settings.bMonth&&d===settings.bDay)cls.push("bday");
-    h+=`<button class="${cls.join(" ")}" data-k="${k}" ${fut?"disabled":""} aria-label="${fmtDate(k)}"><span class="d">${d}</span><span class="n">${fut?"":countFor(k)}</span></button>`;
+    h+=`<button class="${cls.join(" ")}" data-k="${k}" ${fut?"disabled":""} aria-label="${fmtDate(k)}${filedLate(k)?", filled in later":""}"><span class="d">${d}</span><span class="n">${fut?"":countFor(k)}</span></button>`;
   }
   $("calGrid").innerHTML=h;
   $("calGrid").classList.toggle("cal-dim",!!calTag);
@@ -1143,7 +1165,7 @@ function renderCore(){
       </div>
       <div class="paper">${list.map(k=>{const d=days[k];return `<div class="mem">
         <span class="day">day ${countFor(k)}</span><h3>${esc(d.coreTitle||(hasText(k)?summary(d.text):"A page from the journal"))}</h3>
-        <span class="date">${fmtDate(k)}</span>${hasText(k)?`<p>Today I ${esc(d.text)}</p>`:""}${photoTag(d.photo)}
+        <span class="date">${fmtDate(k)}${filedLate(k)?` · filled in ${shortOn(filedOn(k),k)}`:""}</span>${hasText(k)?`<p>Today I ${esc(d.text)}</p>`:""}${photoTag(d.photo)}
         ${tagsOf(k).length?`<div style="grid-column:2">${chipsStatic(tagsOf(k))}</div>`:""}
         <button data-k="${k}">Open in calendar</button></div>`}).join("")}</div>
     </div>`).join("");
@@ -1537,7 +1559,7 @@ function pushShare(k){
   if(!canShareApi()||!shareState.joined||!hasEntry(k))return;
   const d=days[k],s=d.share||{};
   // the day number only if you chose to show it: with the date, it gives away your birthday
-  api.share.push({day:k,count:settings.shareCount?countFor(k):null,streak:streakAt(k),snippet:s.line||null,photo:s.photo&&d.photo?d.photo:null})
+  api.share.push({day:k,count:settings.shareCount?countFor(k):null,streak:streakAt(k),late:filedLate(k),streakLate:lateInStreak(k),snippet:s.line||null,photo:s.photo&&d.photo?d.photo:null})
     .then(r=>{if(r&&r.ok&&r.data)shareState.unsent=r.data.unsent||0}).catch(()=>{});
 }
 const yesterdayKey=()=>fromDn(kdn(todayKey())-1);
@@ -1661,7 +1683,9 @@ function buildFriendsShell(host,mode){
 function friendCard(f){
   const p=f.posts[0],done=friendDone(f);
   const recent=p&&(done||p.day===yesterdayKey());
-  const meta=[p&&p.count!=null?`day ${p.count}`:"",recent&&p.streak>1?`${p.streak}-day streak`:""].filter(Boolean).join(" · ");
+  // days they filled in later count for the streak, and say so
+  const streakTxt=recent&&p.streak>1?`${p.streak}-day streak`+(p.streakLate?` (${p.streakLate} filled in later)`:""):p&&p.late?"filled in later":"";
+  const meta=[p&&p.count!=null?`day ${p.count}`:"",streakTxt].filter(Boolean).join(" · ");
   return `<div class="paper friend">
     <div class="ftop"><h3 class="grow">${esc(f.name)}</h3><span class="pill${done?" done":""}">${done?"Wrote today":p?`Last wrote ${relDay(p.day)}`:"Hasn't written yet"}</span></div>
     ${meta?`<div class="hint">${meta}</div>`:""}
@@ -1771,7 +1795,7 @@ function toMarkdown(){
     const by=lastBirthday(k)[0];
     if(by!==curBy){curBy=by;lines.push(`## ${yearName(by)} (${fmtDate(keyOf(by,settings.bMonth,settings.bDay))} → ${fmtDate(yearEnd(by))})`,``)}
     const d=days[k];
-    lines.push(`### ${longDate(k)}, ${parseKey(k)[0]} · day ${countFor(k)}${d.core?` · ★ ${d.coreTitle||"Core memory"}`:""}`,``);
+    lines.push(`### ${longDate(k)}, ${parseKey(k)[0]} · day ${countFor(k)}${d.core?` · ★ ${d.coreTitle||"Core memory"}`:""}${filedLate(k)?` · filled in ${fmtDate(filedOn(k))}`:""}`,``);
     if(hasText(k))lines.push(`Today I ${d.text}`,``);
     if(d.photo)lines.push(`Photo: photos/${d.photo}`,``);
     if(tagsOf(k).length)lines.push(`Tags: ${tagsOf(k).join(", ")}`,``);

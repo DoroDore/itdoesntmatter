@@ -156,6 +156,7 @@ function createSharing(o) {
       id: String(f.id), name: String(f.name || ""), state: f.state,
       posts: (f.posts || []).map((p) => ({
         day: String(p.day), count: p.count == null ? null : p.count, streak: p.streak || 0,
+        late: !!p.filed_late, streakLate: Number(p.streak_late) || 0,
         snippet: p.snippet || "", photo: p.photo_path || null, updatedAt: p.updated_at || ""
       }))
     }));
@@ -193,9 +194,10 @@ function createSharing(o) {
   /**
    * Queue what friends see for one day, then try to send it. It waits in an outbox until it goes
    * through, so writing offline still shows up later.
-   * @param {{day:string, count?:number|null, streak?:number, snippet?:string|null, photo?:string|null}} p
-   *   count: your day number, only if you chose to show it. photo: the file name of one of your saved
-   *   photos, only if you chose to share it.
+   * @param {{day:string, count?:number|null, streak?:number, late?:boolean, streakLate?:number, snippet?:string|null, photo?:string|null}} p
+   *   count: your day number, only if you chose to show it. late: this day's page was filled in later.
+   *   streakLate: how many days of the streak were. photo: the file name of one of your saved photos,
+   *   only if you chose to share it.
    */
   async function push(p) {
     if (!p || !DAY_RE.test(p.day)) throw new ShareError("bad-input", "Bad day.");
@@ -204,7 +206,7 @@ function createSharing(o) {
     const photo = typeof p.photo === "string" && p.photo ? p.photo : null;
     update((st) => {
       st.outbox = st.outbox || {};
-      st.outbox[p.day] = { count: num(p.count), streak: num(p.streak) || 0, snippet, photo, at: Date.now() };
+      st.outbox[p.day] = { count: num(p.count), streak: num(p.streak) || 0, late: !!p.late, streakLate: num(p.streakLate) || 0, snippet, photo, at: Date.now() };
       if (st.rejected) delete st.rejected[p.day];
       // a pending clean-up must not delete a photo you've just shared again
       if (photo && st.cleanup) st.cleanup = st.cleanup.filter((x) => x !== `${st.userId}/${p.day}.jpg`);
@@ -276,7 +278,12 @@ function createSharing(o) {
     }
     // the post first: once it stops pointing at the photo, friends can no longer read the photo
     await call("POST", "/rest/v1/posts?on_conflict=user_id,day", {
-      body: { user_id: userId, day, count: item.count, streak: item.streak, snippet: item.snippet, photo_path: photoPath, updated_at: new Date().toISOString() },
+      body: {
+        user_id: userId, day, count: item.count, streak: item.streak,
+        // items queued by 1.8 have neither, which reads as on time
+        filed_late: !!item.late, streak_late: Math.min(item.streakLate || 0, item.streak || 0),
+        snippet: item.snippet, photo_path: photoPath, updated_at: new Date().toISOString()
+      },
       headers: { Prefer: "resolution=merge-duplicates,return=minimal" }
     });
     if (!photoPath) {
