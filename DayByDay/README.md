@@ -11,6 +11,13 @@ Counts the days since your birthday (Dec 29 unless you change it in Settings). E
 
 Run the installer again whenever the code in `source/` changes. Your entries are never touched.
 
+## Writing
+
+- Each day gets a fresh sheet on the pad. Write at least one "Today I…" sentence on it, or add a photo of your paper journal.
+- **Tear off and file** (or ⌘↩) saves it. The sheet tears off the pad and drops into that day's folder.
+- To change it, press **Take it out**, edit it, and file it again. **Put it back unchanged** returns it as it was.
+- Past days are filed in the **Calendar**. Click one to read it, or to fill in a day you missed.
+
 ## Paper journals
 
 If you write on paper, click **Add a photo of your paper journal** under "Today I…", or drop a photo onto it. JPEG, PNG and iPhone HEIC all work.
@@ -26,7 +33,9 @@ Open the **Friends** tab, type your name and press **Turn on Friends**. You get 
 - **Connecting:** send your code to a friend. When they add it and you accept, or you add theirs, you see each other. Friends of friends don't see you.
 - **What friends always see:** whether you've written each day, and your streak.
 - **What they see only if you choose:**
-  - Under each entry, **Share a line from this entry** (up to 280 characters, starting with your first sentence, which you can edit) and **Share the photo**. Both are off unless you turn them on for that entry. Turning them off later hides them from friends right away and deletes the photo from the server.
+  - In the envelope under each page, **Put a line from this page in the envelope** and **Put the photo in too**. Both are off unless you turn them on for that page, and they go out when you file it.
+    - The line is up to 280 characters. It starts as the words you selected on the page, or your first sentence if nothing is selected, and you can edit it.
+    - To take them back, take the page out, turn them off and file it again. That hides them from friends right away and deletes the photo from the server.
   - Under **You** in the Friends tab, **Show friends my day number**. It's off by default because, with the date, it tells friends your birthday. Turning it off removes it from everything you've shared.
 - **Your entries never leave the Mac.** Only those few things do.
 - The Today tab shows which friends have written today. Click it to open Friends.

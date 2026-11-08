@@ -8,43 +8,46 @@
 <style>
 /* Fraunces (variable: wght 100-900, opsz, SOFT, WONK). Optical size follows the font size on its own. */
 @font-face{font-family:"Fraunces";src:url("fonts/fraunces-latin-full-normal.woff2") format("woff2");font-weight:100 900;font-style:normal;font-display:block;unicode-range:U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD}
-@font-face{font-family:"Fraunces";src:url("fonts/fraunces-latin-full-italic.woff2") format("woff2");font-weight:100 900;font-style:italic;font-display:block;unicode-range:U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD}
 @font-face{font-family:"Fraunces";src:url("fonts/fraunces-latin-ext-full-normal.woff2") format("woff2");font-weight:100 900;font-style:normal;font-display:block;unicode-range:U+0100-02BA,U+02BD-02C5,U+02C7-02CC,U+02CE-02D7,U+02DD-02FF,U+0304,U+0308,U+0329,U+1D00-1DBF,U+1E00-1E9F,U+1EF2-1EFF,U+2020,U+20A0-20AB,U+20AD-20C0,U+2113,U+2C60-2C7F,U+A720-A7FF}
-@font-face{font-family:"Fraunces";src:url("fonts/fraunces-latin-ext-full-italic.woff2") format("woff2");font-weight:100 900;font-style:italic;font-display:block;unicode-range:U+0100-02BA,U+02BD-02C5,U+02C7-02CC,U+02CE-02D7,U+02DD-02FF,U+0304,U+0308,U+0329,U+1D00-1DBF,U+1E00-1E9F,U+1EF2-1EFF,U+2020,U+20A0-20AB,U+20AD-20C0,U+2113,U+2C60-2C7F,U+A720-A7FF}
 @font-face{font-family:"JetBrains Mono";src:url("fonts/jetbrains-mono-wght.woff2") format("woff2");font-weight:100 800}
 
 /* Layout: one calm column under a draggable title strip; a full-window "new day" curtain sits above everything until pressed.
-   Look: printed matter on pale blue paper, after hand-lettered posters. There are no cards: sections sit on the page,
-   divided by fine rules, with square corners. Dark brown ink for text; a thin calligraphic italic for big numbers and
-   titles; crimson script for what's special (core memories, the "Today I…" prompt, top words, year titles); and a cream
-   label like a pasted-on tag. Weight varies on purpose: thin display, light writing, bold small-capital credits.
+   Look: a paper journal on a pale blue desk. Pages of the app are printed matter: no cards, sections divided by fine rules,
+   square corners, dark brown ink, upright type (nothing is italic), crimson for what's special, and a cream label like a
+   pasted-on tag. The day's entry is a real sheet: it sits on a pad, you write on its rules, and filing it tears it off
+   along the perforation and drops it into a folder. A line from it can go to friends in an envelope.
+   Weight varies on purpose: thin display, light writing, bold small-capital credits.
    Dark mode turns the sheet over: brown paper, pale blue ink. */
 :root{
-  --bg:#CAD8E9; --surface:#D6E1EE; --ink:#2A1A15; --muted:#584640; --line:#9AA3B1; --hair:#B2BECF;
-  --accent:#3A241D; --accent-ink:#E3EBF4; --wash:#BBCBE0;
+  --bg:#DFE8F3; --surface:#E9EFF7; --ink:#2A1A15; --muted:#584640; --line:#A5AFBD; --hair:#C4CFDD;
+  --accent:#3A241D; --accent-ink:#E3EBF4; --wash:#D0DCEA;
   --stamp:#93302A; --cream:#EEE8D8; --danger:#8C2820;
+  /* the journal: a sheet on a pad, the folder it's filed in, the envelope for friends */
+  --sheet:#FCFBF7; --sheet-edge:#C9D1DC; --rule:#C5D5E8; --margin:color-mix(in srgb,#93302A 42%,transparent); --binding:#3A241D;
+  --folder:#E4D8BC; --folder-front:#EADFC6; --env:#F3EDE0; --env-flap:#E7DDC8; --shadow:color-mix(in srgb,#2A1A15 22%,transparent);
   /* full-screen moments (the curtain) */
-  --c-bg:#D3DFEC; --c-edge:#BFCFE3; --c-deep:#AABED8; --c-ink:#2A1A15; --c-dim:#584640; --c-stamp:#93302A; --c-glow:#EEE8D8;
+  --c-bg:#E3EBF5; --c-edge:#CEDAE9; --c-deep:#B9CAE0; --c-ink:#2A1A15; --c-dim:#584640; --c-stamp:#93302A; --c-glow:#EEE8D8;
   --grain:url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' width='180' height='180'><filter id='g'><feTurbulence type='fractalNoise' baseFrequency='.8' numOctaves='3' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 .16  0 0 0 0 .1  0 0 0 0 .08  0 0 0 .09 0'/></filter><rect width='100%25' height='100%25' filter='url(%23g)'/></svg>");
-  /* a pen flourish, used as a mask so it takes the ink color in either theme */
-  --flourish:url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 320 40'><g id='h' fill='none' stroke='black' stroke-width='1.3' stroke-linecap='round'><path d='M160 21C152 12 141 12 142 18C143 25 155 25 160 21'/><path d='M160 21C138 31 112 31 92 23C72 15 50 12 35 18C23 23 20 32 27 33.5C34 35 35 26 29 23.5'/><path d='M139 15C119 5 93 5 77 11'/><circle cx='73.5' cy='12.6' r='1.7' fill='black' stroke='none'/></g><use href='%23h' transform='matrix(-1 0 0 1 320 0)'/></svg>");
   --display:"Fraunces",Georgia,serif;
   --body:"Fraunces",Georgia,serif;
   --ui:"Fraunces",Georgia,serif;
   --mono:"JetBrains Mono",ui-monospace,Menlo,monospace;
-  --write:340; --swash:"SOFT" 0,"WONK" 1;
+  --write:340; --swash:"SOFT" 0,"WONK" 0;
   color-scheme:light;
 }
 @media (prefers-color-scheme: dark){:root{
   --bg:#1C1310; --surface:#251915; --ink:#D3DEEC; --muted:#9EAABD; --line:#5C483E; --hair:#3B2C26;
   --accent:#C2D0E4; --accent-ink:#1C1310; --wash:#30221D;
   --stamp:#E59C90; --cream:#3A2620; --danger:#EC9484;
+  --sheet:#2A1E19; --sheet-edge:#0E0907; --rule:#3A4452; --margin:color-mix(in srgb,#E59C90 38%,transparent); --binding:#0E0907;
+  --folder:#3A2B22; --folder-front:#43332A; --env:#33251F; --env-flap:#3D2D26; --shadow:rgba(0,0,0,.5);
   --c-bg:#291B17; --c-edge:#170F0C; --c-deep:#0C0807; --c-ink:#D3DEEC; --c-dim:#929FB4; --c-stamp:#E59C90;
   color-scheme:dark}}
 
 *{box-sizing:border-box}
 html,body{margin:0;height:100%}
-body{background:var(--grain),var(--bg);color:var(--ink);font-family:var(--ui);font-size:15px;line-height:1.5;-webkit-font-smoothing:antialiased}
+body{background:var(--grain),var(--bg);color:var(--ink);font-family:var(--ui);font-size:15px;line-height:1.5;-webkit-font-smoothing:antialiased;font-synthesis:none}
+em,i,cite{font-style:normal}
 .titlebar{position:fixed;inset:0 0 auto 0;height:40px;-webkit-app-region:drag;z-index:5}
 .wrap{max-width:640px;margin:0 auto;padding-inline:28px;padding-block:46px 72px;display:flex;flex-direction:column;gap:26px}
 .view{display:flex;flex-direction:column;gap:26px}
@@ -56,7 +59,7 @@ button,input,select,textarea,nav{-webkit-app-region:no-drag}
 
 /* masthead: the title in script, with the "29" label pasted over its edge */
 header{display:flex;flex-direction:column;align-items:center;gap:14px;position:relative;z-index:6;padding-bottom:4px;border-bottom:1px solid var(--line)}
-.brand{position:relative;font-family:var(--display);font-style:italic;font-weight:300;font-size:46px;line-height:1.05;font-variation-settings:var(--swash);padding:0 4px}
+.brand{position:relative;font-family:var(--display);font-weight:300;font-size:46px;line-height:1.05;font-variation-settings:var(--swash);padding:0 4px}
 .brand .mark{position:absolute;left:-22px;top:3px;width:38px;height:25px;background:var(--cream);color:var(--stamp);font-size:15px;font-weight:500;display:grid;place-items:center;box-shadow:0 1px 2px color-mix(in srgb,#2A1A15 28%,transparent);transform:rotate(-3deg)}
 nav{display:flex;justify-content:safe center;gap:0;max-width:100%;overflow-x:auto;scrollbar-width:none}
 nav::-webkit-scrollbar{display:none}
@@ -69,38 +72,75 @@ nav button[aria-selected="true"]{color:var(--ink);box-shadow:inset 0 -2px 0 var(
 /* the day count, set like a title page */
 .counter{display:flex;flex-direction:column;align-items:center;text-align:center;gap:12px;padding-top:6px}
 .counter>div{width:100%}
-.num{font-family:var(--display);font-style:italic;font-weight:300;font-variation-settings:var(--swash);font-size:clamp(110px,24vw,188px);line-height:.95;letter-spacing:-.01em;font-variant-numeric:lining-nums tabular-nums;color:var(--ink)}
-.num::after{content:"";display:block;width:min(300px,70%);height:30px;margin:8px auto 0;background:var(--ink);-webkit-mask:var(--flourish) center/contain no-repeat;mask:var(--flourish) center/contain no-repeat}
-.sub{color:var(--muted);font-size:15px;font-style:italic}
+.num{font-family:var(--display);font-weight:300;font-variation-settings:var(--swash);font-size:clamp(110px,24vw,188px);line-height:.95;letter-spacing:-.01em;font-variant-numeric:lining-nums tabular-nums;color:var(--ink)}
+.sub{color:var(--muted);font-size:15px}
 .bar{height:3px;background:var(--hair)}
 .bar i{display:block;height:100%;background:var(--ink)}
 .counter .bar{height:1px;background:var(--line);margin-top:6px}
 .counter .bar i{height:3px;transform:translateY(-1px)}
 .barlabels{display:flex;justify-content:space-between;gap:8px;font-size:10.5px;letter-spacing:.16em;text-transform:uppercase;font-weight:600;color:var(--muted);margin-top:8px}
-.next{font-size:13px;font-style:italic;color:var(--muted);margin-top:8px}
+.next{font-size:13px;color:var(--muted);margin-top:8px}
 .next b{color:var(--ink);font-style:normal;font-weight:650}
 .status{display:flex!important;justify-content:center;align-items:center;gap:10px;flex-wrap:wrap}
 .status code{font-family:var(--mono);font-size:13px;padding:2px 6px;border-bottom:1px dotted var(--line);user-select:all}
-.ghost{border:1px solid var(--line);background:none;padding:4px 12px;border-radius:2px;font-size:14px;font-style:italic}
+.ghost{border:1px solid var(--line);background:none;padding:4px 12px;border-radius:2px;font-size:14px}
 .ghost:hover{border-color:var(--ink);background:color-mix(in srgb,var(--ink) 5%,transparent)}
 
 .stats{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));border-top:1px solid var(--line);border-bottom:1px solid var(--line)}
 .stat{display:flex;flex-direction:column;align-items:center;gap:0;padding:12px 6px 8px;text-align:center}
 .stat+.stat{border-left:1px solid var(--hair)}
-.stat b{display:block;font-family:var(--display);font-style:italic;font-size:34px;line-height:1.15;font-weight:650;font-variation-settings:var(--swash);font-variant-numeric:lining-nums tabular-nums}
+.stat b{display:block;font-family:var(--display);font-size:34px;line-height:1.15;font-weight:650;font-variation-settings:var(--swash);font-variant-numeric:lining-nums tabular-nums}
 
-/* entry: a ruled page */
-.entry{display:flex;flex-direction:column;gap:10px}
-.entryhead{display:flex;justify-content:space-between;align-items:baseline;gap:8px;flex-wrap:wrap}
+/* entry: a ruled sheet on a pad */
+.entry{display:flex;flex-direction:column;gap:14px}
 .paper{background:none;border:0;border-top:1px solid var(--line);border-radius:0;padding:18px 0 0}
 .paper:focus-within{border-top-color:var(--ink)}
-.prefix{font-family:var(--display);font-style:italic;font-weight:400;font-size:32px;line-height:1.1;color:var(--stamp);font-variation-settings:var(--swash)}
+.prefix{font-family:var(--display);font-weight:400;font-size:32px;line-height:1.1;color:var(--stamp);font-variation-settings:var(--swash)}
 textarea{width:100%;min-height:160px;resize:vertical;border:0;color:var(--ink);font-family:var(--body);font-weight:var(--write);font-size:20px;line-height:32px;padding:0;margin-top:4px;
   background:repeating-linear-gradient(to bottom,transparent 0 31px,var(--hair) 31px 32px);background-attachment:local}
 textarea:focus{outline:none}
-textarea::placeholder,input::placeholder{color:var(--muted);opacity:.8;font-style:italic}
+textarea::placeholder,input::placeholder{color:var(--muted);opacity:.8}
+
+/* the journal. The day's entry is a sheet on a pad, under a glued binding, with blue rules and a crimson margin.
+   Filing tears it off along the perforation (a torn edge, the same for a given day) and drops it into a folder. */
+.pad{position:relative;background:var(--sheet);border-radius:3px 3px 1px 1px;
+  box-shadow:0 1px 0 var(--sheet-edge),0 3px 0 -1px var(--sheet),0 4px 0 -1px var(--sheet-edge),0 6px 0 -2px var(--sheet),0 7px 0 -2px var(--sheet-edge),0 16px 20px -14px var(--shadow)}
+.pad::before,.leaf::before{content:"";position:absolute;top:0;bottom:0;left:42px;width:1.5px;background:var(--margin);pointer-events:none}
+.binding{position:relative;z-index:2;height:14px;background:var(--binding);border-radius:3px 3px 0 0}
+.sheet{position:relative;z-index:1;transform-origin:14% 0}
+.leaf{position:relative;background:var(--sheet);padding:14px 24px 18px 60px;display:grid;gap:4px;border-top:1.5px dotted color-mix(in srgb,var(--ink) 30%,transparent)}
+.sheethead{display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;padding-bottom:6px}
+.leaf textarea{background:repeating-linear-gradient(to bottom,transparent 0 31px,var(--rule) 31px 32px);background-attachment:local}
+.sheetfoot{display:grid;gap:12px;margin-top:10px;padding-top:12px;border-top:1px solid var(--rule)}
+.sheet.over .leaf{background:color-mix(in srgb,var(--wash) 45%,var(--sheet))}
+
+/* filed: the torn-off sheet in its folder, under a tab */
+.folder{position:relative;margin-top:24px;background:var(--folder);border-radius:0 4px 3px 3px;padding:18px 16px 0;box-shadow:0 1px 3px var(--shadow)}
+.ftab{position:absolute;bottom:100%;left:0;padding:4px 16px 2px;background:var(--folder);border-radius:5px 5px 0 0;font-size:10.5px;letter-spacing:.16em;text-transform:uppercase;font-weight:650;color:var(--muted);font-variant-numeric:lining-nums}
+.sheetwrap{filter:drop-shadow(0 1px 1.5px var(--shadow))}
+.leaf.filed{border-top:0;padding-top:18px;padding-bottom:58px;gap:8px;transform:rotate(-.35deg)}
+.leaf .read{margin:0;font-family:var(--body);font-weight:var(--write);font-size:20px;line-height:32px;white-space:pre-wrap;overflow-wrap:anywhere;background:repeating-linear-gradient(to bottom,transparent 0 31px,var(--rule) 31px 32px)}
+.leaf .read .ti{color:var(--stamp);font-weight:400}
+.pocket{position:relative;z-index:1;margin:-40px -16px 0;padding:12px 16px;background:var(--folder-front);border-radius:0 0 3px 3px;box-shadow:0 -1px 2px var(--shadow);display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+
+/* the envelope: a line from the page (and maybe the photo) for friends. Open, the line sticks out on a slip;
+   filing slides it in, folds the flap over and sends it. */
+.mail{position:relative;display:grid;margin-top:30px}
+.slip{position:relative;z-index:1;margin:0 30px -24px;padding:10px 18px 32px;background:var(--sheet);box-shadow:0 1px 2px var(--shadow);display:grid;gap:2px;transform:rotate(-.5deg)}
+.slip input[type=text]{font-family:var(--body);font-weight:var(--write);font-size:17px;border-bottom-color:var(--rule);padding-top:2px}
+.envelope{position:relative;background:var(--env);box-shadow:0 1px 3px var(--shadow)}
+.envelope .flap{position:absolute;left:0;right:0;bottom:100%;height:34px;background:var(--env-flap);clip-path:polygon(0 100%,50% 0,100% 100%);transform-origin:50% 100%}
+.envelope .flap2{position:absolute;z-index:3;left:0;right:0;top:0;height:40px;background:var(--env-flap);clip-path:polygon(0 0,100% 0,50% 100%);transform-origin:50% 0;transform:scaleY(0);pointer-events:none}
+.envbody{position:relative;z-index:2;background:var(--env);padding:18px 92px 16px 20px;display:grid;gap:8px}
+.stamp{position:absolute;z-index:4;top:12px;right:14px;width:44px;height:50px;display:grid;place-items:center;background:var(--sheet);color:var(--stamp);font-size:15px;font-weight:600;font-variant-numeric:lining-nums;border:3px dotted var(--env);outline:1px solid var(--margin);outline-offset:-8px}
+.postmark{position:absolute;z-index:5;top:12px;right:50px;width:60px;height:60px;border:1.5px solid var(--margin);border-radius:50%;display:grid;place-content:center;text-align:center;font-size:8.5px;line-height:1.3;letter-spacing:.14em;text-transform:uppercase;font-weight:650;color:var(--stamp);opacity:.8;transform:rotate(-14deg);font-variant-numeric:lining-nums}
+.envelope.sealed .flap2{transform:none}
+.envelope.sealed .envbody{padding:44px 130px 16px 20px}
+.envelope.sealed .say{margin:0;font-family:var(--body);font-weight:var(--write);font-size:17px;line-height:1.5}
+.envelope.sealed .say .ti{color:var(--stamp)}
+.mailnote{margin:0}
 .row{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
-.core-toggle{display:inline-flex;align-items:center;gap:8px;border:1px solid var(--line);background:none;padding:6px 14px;border-radius:2px;font-size:14px;font-style:italic}
+.core-toggle{display:inline-flex;align-items:center;gap:8px;border:1px solid var(--line);background:none;padding:6px 14px;border-radius:2px;font-size:14px}
 .core-toggle[aria-pressed="true"]{background:var(--cream);border-color:var(--stamp);color:var(--stamp)}
 .core-toggle svg{width:16px;height:16px}
 .core-toggle[aria-pressed="true"] svg{fill:var(--stamp);stroke:var(--stamp)}
@@ -110,19 +150,19 @@ input[type=text]:focus-visible,input[type=number]:focus-visible,select:focus-vis
 .save{border:0;background:var(--accent);color:var(--accent-ink);padding:10px 20px;border-radius:2px;font-size:11.5px;font-weight:650;letter-spacing:.16em;text-transform:uppercase}
 .save:disabled{opacity:.35;cursor:not-allowed}
 .hint{font-size:13px;color:var(--muted)}
-.saved{font-size:13px;font-style:italic;color:var(--accent)}
+.saved{font-size:13px;color:var(--accent)}
 .grow{flex:1;min-width:0}
 
 /* calendar: a printed grid */
 .calhead{display:flex;align-items:center;justify-content:space-between;gap:8px}
-.calhead h2{font-family:var(--display);font-style:italic;font-weight:350;font-size:34px;font-variation-settings:var(--swash);margin:0;font-variant-numeric:lining-nums;text-align:center}
+.calhead h2{font-family:var(--display);font-weight:350;font-size:34px;font-variation-settings:var(--swash);margin:0;font-variant-numeric:lining-nums;text-align:center}
 .grid{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:4px}
 .dow{font-size:10.5px;text-align:center;color:var(--muted);padding-bottom:4px;letter-spacing:.16em;font-weight:600}
 .cell{aspect-ratio:1/1;border:1px solid var(--hair);background:none;border-radius:0;padding:7px;display:flex;flex-direction:column;justify-content:space-between;align-items:flex-start;text-align:left;min-width:0;position:relative}
 .cell:not(.future):not(.blank):hover{border-color:var(--ink)}
 .cell .d{font-size:16px;font-weight:300}
 .cell.has .d{font-weight:750}
-.cell .n{font-size:11px;font-style:italic;color:var(--muted);font-variant-numeric:lining-nums tabular-nums}
+.cell .n{font-size:11px;color:var(--muted);font-variant-numeric:lining-nums tabular-nums}
 .cell.has::after{content:"";position:absolute;top:9px;right:9px;width:6px;height:6px;border-radius:50%;background:var(--ink)}
 .cell.core{background:var(--cream);border-color:transparent;box-shadow:0 1px 2px color-mix(in srgb,#2A1A15 22%,transparent)}
 .cell.core::after{background:var(--stamp);width:8px;height:8px}
@@ -131,26 +171,24 @@ input[type=text]:focus-visible,input[type=number]:focus-visible,select:focus-vis
 .cell.bday .n{color:var(--stamp);font-weight:600}
 .cell.future{opacity:.4;cursor:default}
 .cell.blank{border-color:transparent}
-.legend{display:flex;justify-content:center;gap:16px;flex-wrap:wrap;font-size:12.5px;font-style:italic;color:var(--muted)}
+.legend{display:flex;justify-content:center;gap:16px;flex-wrap:wrap;font-size:12.5px;color:var(--muted)}
 .legend i{display:inline-block;width:7px;height:7px;border-radius:50%;margin-right:6px;vertical-align:middle}
-.detail h3{font-family:var(--display);font-style:italic;font-weight:400;font-size:24px;margin:0;font-variation-settings:var(--swash)}
-.detail .read{font-family:var(--body);font-weight:var(--write);font-size:19px;line-height:1.55}
-.detail .read em{color:var(--muted)}
-.coreline{display:flex;align-items:center;gap:6px;color:var(--stamp);font-style:italic;font-size:14px}
+.detail h3{font-family:var(--display);font-weight:400;font-size:24px;margin:0;font-variation-settings:var(--swash)}
+.coreline{display:flex;align-items:center;gap:6px;color:var(--stamp);font-size:14px}
 .coreline svg{width:15px;height:15px;fill:currentColor;stroke:currentColor}
 
 /* core memories */
 .mem{display:grid;grid-template-columns:auto minmax(0,1fr);gap:4px 18px;padding:16px 0;border-top:1px solid var(--hair)}
 .mem:first-child{border-top:0;padding-top:4px}
 .mem .day{font-size:10.5px;letter-spacing:.14em;text-transform:uppercase;color:var(--stamp);font-weight:650;padding-top:7px;white-space:nowrap}
-.mem h3{margin:0;font-family:var(--display);font-style:italic;font-weight:450;font-size:21px;font-variation-settings:var(--swash);text-wrap:balance}
+.mem h3{margin:0;font-family:var(--display);font-weight:450;font-size:21px;font-variation-settings:var(--swash);text-wrap:balance}
 .mem p{margin:0;grid-column:2;font-family:var(--body);font-weight:var(--write);font-size:17px}
-.mem .date{grid-column:2;font-size:12px;font-style:italic;color:var(--muted)}
-.mem button{grid-column:2;justify-self:start;border:0;background:none;color:var(--accent);padding:0;font-size:13px;font-style:italic;text-decoration:underline;text-underline-offset:3px}
+.mem .date{grid-column:2;font-size:12px;color:var(--muted)}
+.mem button{grid-column:2;justify-self:start;border:0;background:none;color:var(--accent);padding:0;font-size:13px;text-decoration:underline;text-underline-offset:3px}
 .yeargroup{display:flex;flex-direction:column;gap:10px}
 .yearhead{display:flex;align-items:baseline;gap:14px;flex-wrap:wrap;padding-bottom:6px;border-bottom:1px solid var(--ink)}
-.yearhead h2{margin:0;font-family:var(--display);font-style:italic;font-weight:350;font-variation-settings:var(--swash);font-size:38px;line-height:1.1;font-variant-numeric:lining-nums;color:var(--stamp)}
-.yearhead .hint{flex:1;min-width:0;font-style:italic}
+.yearhead h2{margin:0;font-family:var(--display);font-weight:350;font-variation-settings:var(--swash);font-size:38px;line-height:1.1;font-variant-numeric:lining-nums;color:var(--stamp)}
+.yearhead .hint{flex:1;min-width:0}
 .yearhead+.paper{border-top:0;padding-top:8px}
 .capgroup .yearhead h2{font-size:28px}
 
@@ -159,7 +197,7 @@ input[type=text]:focus-visible,input[type=number]:focus-visible,select:focus-vis
 .chip{border:1px solid var(--line);background:none;border-radius:2px;padding:4px 11px;font-size:13px;color:var(--muted)}
 .chip:hover{border-color:var(--ink);color:var(--ink)}
 .chip[aria-pressed="true"]{background:var(--ink);border-color:var(--ink);color:var(--bg)}
-.chip.static{cursor:default;padding:1px 8px;font-size:12px;font-style:italic;background:none;border-color:var(--hair);color:var(--muted)}
+.chip.static{cursor:default;padding:1px 8px;font-size:12px;background:none;border-color:var(--hair);color:var(--muted)}
 .chip .x{margin-left:6px;opacity:.7}
 .cal-dim .cell.has:not(.match),.cal-dim .cell:not(.has):not(.blank):not(.future){opacity:.28}
 .cell.match{border-color:var(--ink)}
@@ -176,12 +214,12 @@ input[type=text]:focus-visible,input[type=number]:focus-visible,select:focus-vis
 
 /* time capsules */
 .capnew{display:grid;gap:12px}
-.capnew input[type=text]{padding:4px 0 8px;font-family:var(--display);font-style:italic;font-size:22px;font-weight:400;font-variation-settings:var(--swash)}
+.capnew input[type=text]{padding:4px 0 8px;font-family:var(--display);font-size:22px;font-weight:400;font-variation-settings:var(--swash)}
 .capnew textarea{min-height:160px}
 input[type=date]{justify-self:start}
 .capgroup{display:flex;flex-direction:column;gap:10px}
 .cap{display:grid;gap:8px}
-.cap h3{margin:0;font-family:var(--display);font-style:italic;font-weight:450;font-size:21px;font-variation-settings:var(--swash);text-wrap:balance}
+.cap h3{margin:0;font-family:var(--display);font-weight:450;font-size:21px;font-variation-settings:var(--swash);text-wrap:balance}
 .cap .top{display:flex;align-items:center;gap:10px}
 .cap .top svg{width:17px;height:17px;flex:none;color:var(--muted)}
 .cap.sealed{border-top-style:dashed;color:var(--muted)}
@@ -191,7 +229,7 @@ input[type=date]{justify-self:start}
 .cap .msg{font-family:var(--body);font-weight:var(--write);font-size:19px;line-height:1.55;white-space:pre-wrap;margin:0}
 .cap.reveal{animation:reveal .5s cubic-bezier(.2,.8,.2,1)}
 @keyframes reveal{from{clip-path:inset(0 50% 0 50%);opacity:.4}to{clip-path:inset(0 0 0 0);opacity:1}}
-.linkbtn{border:0;background:none;padding:0;font-size:13px;font-style:italic;color:var(--muted);text-decoration:underline;text-underline-offset:3px}
+.linkbtn{border:0;background:none;padding:0;font-size:13px;color:var(--muted);text-decoration:underline;text-underline-offset:3px}
 .linkbtn.danger{color:var(--danger)}
 .tabdot{display:inline-block;width:5px;height:5px;border-radius:50%;background:var(--stamp);margin-left:5px;vertical-align:middle}
 
@@ -203,7 +241,7 @@ input[type=date]{justify-self:start}
 .curtain.lastday.done .big{opacity:1}
 .summary{display:flex;gap:30px;flex-wrap:wrap;justify-content:center;max-width:640px}
 .summary div{display:grid;gap:2px}
-.summary b{font-family:var(--display);font-style:italic;font-weight:600;font-size:32px;font-variation-settings:var(--swash);color:var(--c-ink);font-variant-numeric:lining-nums tabular-nums}
+.summary b{font-family:var(--display);font-weight:600;font-size:32px;font-variation-settings:var(--swash);color:var(--c-ink);font-variant-numeric:lining-nums tabular-nums}
 .summary span{font-size:10.5px;letter-spacing:.16em;text-transform:uppercase;font-weight:600;color:var(--c-dim)}
 
 /* words */
@@ -211,7 +249,7 @@ input[type=date]{justify-self:start}
 .wline{display:flex;flex-wrap:wrap;justify-content:center;align-items:baseline;gap:2px 16px}
 .wfield .w{border:0;background:none;color:var(--ink);font-family:var(--display);line-height:1.08;letter-spacing:-.01em;padding:0 3px;border-radius:0;animation:wbloom .5s cubic-bezier(.2,.8,.2,1) both;transition:color .15s}
 .wfield .w:hover{color:var(--stamp)}
-.wfield .w.top{color:var(--stamp);font-style:italic;font-variation-settings:var(--swash)}
+.wfield .w.top{color:var(--stamp);font-variation-settings:var(--swash)}
 .wfield .w.dim{color:var(--muted)}
 .wfield .w.cls{font-family:var(--mono);letter-spacing:0;background:var(--wash);padding:.06em .4em}
 .wfield .w[aria-pressed="true"]{outline:1.5px solid var(--stamp);outline-offset:2px}
@@ -220,11 +258,11 @@ input[type=date]{justify-self:start}
 .wrow:hover{background:color-mix(in srgb,var(--wash) 60%,transparent)}
 .wrow[aria-pressed="true"]{background:color-mix(in srgb,var(--wash) 60%,transparent);border-color:var(--ink)}
 .wrow .name{font-size:15px;font-weight:550;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.wrow .cnt{font-size:12px;font-style:italic;color:var(--muted);font-variant-numeric:lining-nums tabular-nums}
+.wrow .cnt{font-size:12px;color:var(--muted);font-variant-numeric:lining-nums tabular-nums}
 .wrow .bar{grid-column:1/-1;display:block;height:3px}
 .clsname{font-family:var(--mono);letter-spacing:0}
 .wdetail{display:grid;gap:12px}
-.wdh{font-family:var(--display);font-style:italic;font-weight:400;font-variation-settings:var(--swash);font-size:34px;line-height:1.1;margin:0;color:var(--stamp)}
+.wdh{font-family:var(--display);font-weight:400;font-variation-settings:var(--swash);font-size:34px;line-height:1.1;margin:0;color:var(--stamp)}
 .wdh.clsname{font-family:var(--mono);font-style:normal;font-variation-settings:normal;font-weight:600;font-size:22px}
 .wdetail .when{text-decoration:none;font-size:10.5px;letter-spacing:.14em;text-transform:uppercase;font-weight:600}
 mark{background:color-mix(in srgb,var(--stamp) 13%,transparent);color:var(--ink);border-bottom:1.5px solid var(--stamp);padding:0 1px}
@@ -235,29 +273,27 @@ mark{background:color-mix(in srgb,var(--stamp) 13%,transparent);color:var(--ink)
 /* photos of paper journals: pasted onto the page */
 .photoslot{margin-top:10px;display:grid;gap:8px}
 .photoslot img{display:block;width:100%;max-height:520px;object-fit:contain;background:var(--wash);box-shadow:0 1px 3px color-mix(in srgb,#2A1A15 25%,transparent)}
-.addphoto{display:inline-flex;align-items:center;gap:8px;border:1px dashed var(--line);background:none;border-radius:2px;padding:6px 14px;font-size:14px;font-style:italic;color:var(--muted);justify-self:start}
+.addphoto{display:inline-flex;align-items:center;gap:8px;border:1px dashed var(--line);background:none;border-radius:2px;padding:6px 14px;font-size:14px;color:var(--muted);justify-self:start}
 .addphoto:hover{border-color:var(--ink);color:var(--ink)}
 .addphoto svg{width:16px;height:16px}
-.paper.over{border-top-color:var(--ink);background:color-mix(in srgb,var(--wash) 60%,transparent)}
 .thumb{display:block;max-width:100%;max-height:260px;cursor:zoom-in;object-fit:contain;background:var(--wash);box-shadow:0 1px 3px color-mix(in srgb,#2A1A15 25%,transparent)}
 .thumb.big{max-height:none;width:100%;cursor:zoom-out}
 .mem .thumb{grid-column:2;margin:4px 0}
 
 /* friends */
-.sharebox{display:grid;gap:8px;border:1px dashed var(--line);border-radius:2px;padding:12px 16px}
-.sharebox input[type=text]{font-family:var(--body);font-weight:var(--write);font-size:16px}
-.fhead{font-family:var(--display);font-style:italic;font-weight:400;font-size:30px;line-height:1.15;font-variation-settings:var(--swash);margin:0;text-wrap:balance}
+.fhead{font-family:var(--display);font-weight:400;font-size:30px;line-height:1.15;font-variation-settings:var(--swash);margin:0;text-wrap:balance}
 .fcode{font-family:var(--mono);font-weight:600;font-size:30px;letter-spacing:.14em;color:var(--accent);user-select:all}
 .friend{display:grid;gap:8px}
 .friend .ftop{display:flex;align-items:center;gap:10px}
-.friend h3{margin:0;font-family:var(--display);font-style:italic;font-weight:450;font-size:22px;font-variation-settings:var(--swash);min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.friend .say{margin:0;font-family:var(--body);font-weight:var(--write);font-size:18px;line-height:1.5}
-.friend .say em{color:var(--muted)}
+.friend h3{margin:0;font-family:var(--display);font-weight:450;font-size:22px;font-variation-settings:var(--swash);min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+/* what a friend sent: a slip from their page */
+.friend .say{margin:0;justify-self:start;max-width:100%;font-family:var(--body);font-weight:var(--write);font-size:18px;line-height:1.5;background:var(--sheet);padding:12px 18px;box-shadow:0 1px 2px var(--shadow);transform:rotate(-.4deg)}
+.friend .say em{color:var(--stamp)}
 .pill{font-size:10px;letter-spacing:.13em;text-transform:uppercase;font-weight:650;border:1px solid var(--line);border-radius:2px;padding:3px 8px;color:var(--muted);white-space:nowrap}
 .pill.done{background:var(--ink);border-color:var(--ink);color:var(--bg)}
 .flist{display:grid;gap:10px}
-.fsum{font-family:var(--display);font-style:italic;font-weight:400;font-size:20px;margin:0}
-.friendsline{display:flex;justify-content:center;align-items:center;gap:8px 16px;flex-wrap:wrap;width:100%;border:0;background:none;border-radius:0;padding:0;margin-top:-8px;font-size:15px;font-style:italic}
+.fsum{font-family:var(--display);font-weight:400;font-size:20px;margin:0}
+.friendsline{display:flex;justify-content:center;align-items:center;gap:8px 16px;flex-wrap:wrap;width:100%;border:0;background:none;border-radius:0;padding:0;margin-top:-8px;font-size:15px}
 .friendsline:hover .who{color:var(--ink)}
 .friendsline .who{display:inline-flex;align-items:center;gap:6px;color:var(--muted)}
 .friendsline .who.done{color:var(--ink)}
@@ -286,7 +322,7 @@ mark{background:color-mix(in srgb,var(--stamp) 13%,transparent);color:var(--ink)
 .segs i.new{background:color-mix(in srgb,var(--c-stamp) 40%,transparent)}
 .curtain.done .segs i.new{background:var(--c-stamp)}
 .segs-label{display:flex;justify-content:space-between;width:min(520px,80vw);font-size:10.5px;letter-spacing:.16em;text-transform:uppercase;font-weight:600;color:var(--c-dim);margin-top:-16px}
-.empty{padding:28px 18px;text-align:center;color:var(--muted);font-style:italic}
+.empty{padding:28px 18px;text-align:center;color:var(--muted)}
 .empty b{display:block;font-family:var(--display);font-weight:400;color:var(--ink);font-size:24px;margin-bottom:4px;font-variation-settings:var(--swash)}
 
 .settings{display:grid;gap:14px}
@@ -298,12 +334,11 @@ mark{background:color-mix(in srgb,var(--stamp) 13%,transparent);color:var(--ink)
 .curtain::before{content:"";position:absolute;inset:22px;border:3px double color-mix(in srgb,var(--c-ink) 35%,transparent);pointer-events:none}
 .curtain.leaving{opacity:0;transform:scale(1.02);pointer-events:none}
 .curtain .date{font-family:var(--ui);font-weight:600;font-size:13px;letter-spacing:.24em;text-transform:uppercase;color:var(--c-dim)}
-.curtain .big{font-family:var(--display);font-style:italic;font-weight:200;font-variation-settings:var(--swash);font-size:clamp(150px,32vw,360px);line-height:.9;letter-spacing:-.01em;font-variant-numeric:lining-nums tabular-nums;color:var(--c-ink);opacity:.3;transition:opacity .5s,font-weight 1.1s cubic-bezier(.2,.8,.2,1)}
-.curtain .big::after{content:"";display:block;width:min(420px,60vw);height:44px;margin:6px auto 0;background:var(--c-ink);-webkit-mask:var(--flourish) center/contain no-repeat;mask:var(--flourish) center/contain no-repeat}
+.curtain .big{font-family:var(--display);font-weight:200;font-variation-settings:var(--swash);font-size:clamp(150px,32vw,360px);line-height:.9;letter-spacing:-.01em;font-variant-numeric:lining-nums tabular-nums;color:var(--c-ink);opacity:.3;transition:opacity .5s,font-weight 1.1s cubic-bezier(.2,.8,.2,1)}
 .curtain.done .big{opacity:1;font-weight:500}
-.curtain .note{font-family:var(--body);font-style:italic;font-weight:var(--write);font-size:22px;color:var(--c-dim);min-height:1.5em;max-width:34ch}
+.curtain .note{font-family:var(--body);font-weight:var(--write);font-size:22px;color:var(--c-dim);min-height:1.5em;max-width:34ch}
 .curtain.done .note{color:var(--c-ink)}
-.curtain button,#cContinue{-webkit-app-region:no-drag;border:1px solid color-mix(in srgb,var(--c-ink) 45%,transparent);background:none;color:var(--c-ink);font-family:var(--display);font-style:italic;font-weight:400;font-size:28px;font-variation-settings:var(--swash);padding:12px 34px;border-radius:2px;transition:background .2s,transform .12s}
+.curtain button,#cContinue{-webkit-app-region:no-drag;border:1px solid color-mix(in srgb,var(--c-ink) 45%,transparent);background:none;color:var(--c-ink);font-family:var(--display);font-weight:400;font-size:28px;font-variation-settings:var(--swash);padding:12px 34px;border-radius:2px;transition:background .2s,transform .12s}
 .curtain button:hover{background:color-mix(in srgb,var(--c-ink) 7%,transparent)}
 .curtain button:active{transform:scale(.97)}
 .curtain button:focus-visible{outline:1.5px solid var(--c-ink);outline-offset:4px}
@@ -379,7 +414,7 @@ mark{background:color-mix(in srgb,var(--stamp) 13%,transparent);color:var(--ink)
     <div class="row"><span class="label">Show</span><div class="chips grow" id="calFilter"></div><button class="ghost" id="randomBtn2">Random day</button></div>
     <div class="grid" id="calGrid"></div>
     <div class="legend"><span><i style="background:var(--accent)"></i>Entry written</span><span><i style="background:var(--stamp)"></i>Core memory</span><span>Small number = day count</span></div>
-    <div class="detail" id="calDetail"></div>
+    <div class="detail entry" id="calDetail"></div>
   </section>
 
   <section id="v-core" class="view" hidden>
@@ -627,7 +662,7 @@ function dismissCurtain(){
   cur.classList.add("leaving");
   if(api) api.fullscreen(false);
   const ready=ripeCapsules().length>0;
-  setTimeout(()=>{cur.hidden=true;curtainUp=false;setTab(ready?"capsules":"today");if(!ready)$("t-text")?.focus()},reduced()?0:600);
+  setTimeout(()=>{cur.hidden=true;curtainUp=false;setTab(ready?"capsules":"today");if(!ready&&$("t-text")){freshFor=todayKey();layFreshSheet();$("t-text").focus()}},reduced()?0:600);
 }
 function acknowledge(){
   const k=todayKey();if(days[k]?.acked)return;
@@ -703,7 +738,7 @@ function renderToday(){
   $("sStreak").textContent=streak();
   $("sCore").textContent=Object.keys(days).filter(isCore).length;
   const host=$("todayEntry");
-  if(host.dataset.built!==k)buildEditor(host,k,true);
+  if(host.dataset.built!==k)buildToday(host,k);
   renderFriendsLine();
   renderOTD();
   renderCapBadge();
@@ -778,14 +813,108 @@ async function cleanPhoto(dataUrl){
   return {bytes:new Uint8Array(await blob.arrayBuffer()),url};
 }
 
-/* ---------- entry editor ---------- */
+/* ---------- the journal: a sheet on a pad, torn off and filed ---------- */
 const STAR='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round" aria-hidden="true"><path d="M12 3l2.7 5.6 6.1.9-4.4 4.3 1 6.1L12 17l-5.4 2.9 1-6.1-4.4-4.3 6.1-.9z"/></svg>';
 const clip=(s,n)=>Array.from(String(s)).slice(0,n).join(""); // by character, so an emoji isn't cut in half
 const firstSentence=t=>clip(t.trim().split(/(?<=[.!?])\s/)[0]||"",280);
-// a file dropped anywhere but an entry's box does nothing (main.js also refuses to navigate to it)
+// a file dropped anywhere but an entry's sheet does nothing (main.js also refuses to navigate to it)
 const hasFiles=e=>!!e.dataTransfer&&[...e.dataTransfer.types].includes("Files");
 document.addEventListener("dragover",e=>{if(hasFiles(e)&&!e.defaultPrevented){e.preventDefault();e.dataTransfer.dropEffect="none"}});
 document.addEventListener("drop",e=>{if(hasFiles(e))e.preventDefault()});
+
+const pageDate=k=>longDate(k)+(parseKey(k)[0]!==parseKey(todayKey())[0]?`, ${parseKey(k)[0]}`:"");
+// the edge a sheet tears along. Seeded by the date, so a day's page always tears the same way.
+function tornEdge(k){
+  let s=0;for(const ch of k)s=(s*31+ch.charCodeAt(0))>>>0;
+  const rnd=()=>{s=(s*1664525+1013904223)>>>0;return s/4294967296};
+  const pts=[];for(let x=0;x<=100;x+=1.25)pts.push(`${x}% ${(1+rnd()*5).toFixed(1)}px`);
+  return `polygon(${pts.join(",")},100% 100%,0 100%)`;
+}
+const wait=ms=>new Promise(r=>setTimeout(r,ms));
+function anim(el,kf,o={}){
+  if(!el||reduced())return Promise.resolve();
+  const a=el.animate(kf,{easing:"cubic-bezier(.2,.8,.2,1)",...o});
+  // a hidden window gets no frames, so filing never waits on an animation for longer than it should take
+  return Promise.race([a.finished.catch(()=>{}),wait((o.duration||0)+(o.delay||0)+250)]);
+}
+const shadowColor=()=>getComputedStyle(document.documentElement).getPropertyValue("--shadow").trim()||"rgba(0,0,0,.25)";
+function layFreshSheet(){const s=$("t-paper");if(s)anim(s,[{transform:"translateY(-22px) rotate(-1.2deg)",opacity:0},{transform:"none",opacity:1}],{duration:620})}
+const pullOut=sheet=>anim(sheet,[{transform:"translateY(40px)",opacity:0},{transform:"none",opacity:1}],{duration:480});
+
+// Filing: the sheet tears off along the perforation, lifts, and drops into the file. If something is going to
+// friends, its slip slides into the envelope, the flap folds over and the envelope goes. Resolves when it's done.
+async function tearAndFile(id,k,sending){
+  const sheet=$(id+"-paper"),leaf=sheet&&sheet.querySelector(".leaf");
+  if(!leaf||reduced())return;
+  const F={fill:"forwards"},sh=shadowColor(),pad=$(id+"-pad"),mail=$(id+"-mail"),acts=$(id+"-actions");
+  if(document.activeElement&&hostOf(id).contains(document.activeElement))document.activeElement.blur();
+  leaf.style.clipPath=tornEdge(k);
+  await anim(sheet,[{transform:"none"},{transform:"translateY(4px) rotate(-1.6deg)"}],{...F,duration:190,easing:"cubic-bezier(.3,0,.5,1)"});
+  const drop=anim(sheet,[
+      {transform:"translateY(4px) rotate(-1.6deg)",opacity:1,filter:`drop-shadow(0 2px 3px ${sh})`},
+      {transform:"translateY(-12px) rotate(1deg)",opacity:1,filter:`drop-shadow(0 12px 16px ${sh})`,offset:.32},
+      {transform:"translateY(130px) rotate(3deg) scale(.9)",opacity:0,filter:`drop-shadow(0 4px 6px ${sh})`}],
+      {...F,duration:680,easing:"cubic-bezier(.45,0,.55,1)"})
+    .then(()=>Promise.all([anim(pad,[{opacity:1},{opacity:0}],{...F,duration:220}),anim(acts,[{opacity:1},{opacity:0}],{...F,duration:180})]));
+  let post=Promise.resolve();
+  if(mail){
+    const slip=$(id+"-slip"),env=mail.querySelector(".envelope");
+    post=sending?(async()=>{
+      await wait(160);
+      if(slip&&!slip.hidden)await anim(slip,[{transform:"rotate(-.5deg)"},{transform:`translateY(${slip.offsetHeight-20}px)`}],{...F,duration:440,easing:"cubic-bezier(.5,0,.3,1)"});
+      await anim(env.querySelector(".flap"),[{transform:"scaleY(1)"},{transform:"scaleY(0)"}],{...F,duration:130,easing:"ease-in"});
+      await anim(env.querySelector(".flap2"),[{transform:"scaleY(0)"},{transform:"scaleY(1)"}],{...F,duration:170,easing:"ease-out"});
+      await anim(mail,[{transform:"none",opacity:1},{transform:"translate(52px,-10px) rotate(4deg)",opacity:0}],{...F,duration:460,delay:160,easing:"cubic-bezier(.5,0,.75,0)"});
+    })():anim(mail,[{opacity:1},{opacity:0}],{...F,duration:280,delay:520});
+  }
+  await Promise.all([drop,post]);
+}
+const hostOf=id=>id==="t"?$("todayEntry"):$("calDetail");
+
+// a filed page: the torn-off sheet in its folder, with what went to friends in an envelope beside it
+function folderHTML(k,pocket){
+  const d=days[k],[,m,dd]=parseKey(k);
+  return `<div class="folder"><span class="ftab">${MON[m-1]} ${dd}</span>
+    <div class="sheetwrap"><div class="leaf filed" style="clip-path:${tornEdge(k)}">
+      <div class="sheethead"><span class="label">${esc(pageDate(k))}</span><span class="label">Day ${countFor(k)}</span></div>
+      ${d.core?`<div class="coreline">${STAR}<span>${esc(d.coreTitle||"Core memory")}</span></div>`:""}
+      ${hasText(k)?`<p class="read"><span class="ti">Today I</span> ${esc(d.text)}</p>`:""}
+      ${photoTag(d.photo)}${chipsStatic(tagsOf(k))}
+    </div></div>
+    <div class="pocket">${pocket}</div></div>`;
+}
+function sentHTML(k){
+  if(!shareState.joined)return "";
+  const d=days[k],s=d.share||{},line=s.line||"",ph=!!(s.photo&&d.photo),[,m,dd]=parseKey(k);
+  const when=k===todayKey()?"today":"this day";
+  if(!line&&!ph)return `<p class="hint mailnote">Friends see that you wrote ${when}. Nothing from the page went to them.</p>`;
+  return `<div class="envelope sealed"><i class="flap2" aria-hidden="true"></i><span class="postmark" aria-hidden="true">Posted<br>${MON[m-1]} ${dd}</span><span class="stamp" aria-hidden="true">29</span>
+    <div class="envbody"><span class="label">In the mail to your friends</span>
+      ${line?`<p class="say"><span class="ti">Today I</span> ${esc(line)}</p>`:""}
+      ${ph?`<span class="hint">${line?"With the photo of the page.":"The photo of the page."}</span>`:""}</div></div>`;
+}
+
+let sheetOut=null, freshFor=null; // today's sheet when it's been taken back out of its folder; the day a fresh sheet was laid down
+function filedToday(k){
+  if(!hasEntry(k)||sheetOut===k)return false;
+  const draft=ui.get("draft:"+k,null); // unfiled changes from before the app closed keep the sheet out
+  return draft==null||draft.trim()===(days[k].text||"").trim();
+}
+function buildToday(host,k){if(filedToday(k))buildFiled(host,k);else buildEditor(host,k,true)}
+function buildFiled(host,k,arrive){
+  host.dataset.built=k;
+  host.innerHTML=folderHTML(k,`<span class="label grow">Filed away</span><button class="ghost" id="t-takeout">Take it out</button>`)+sentHTML(k);
+  hydratePhotos(host);
+  $("t-takeout").onclick=()=>{sheetOut=k;buildEditor(host,k,true);pullOut($("t-paper"))};
+  if(arrive)arriveFolder(host);
+}
+// the torn-off sheet drops into its folder, and the sealed envelope settles beside it
+function arriveFolder(root){
+  anim(root.querySelector(".folder"),[{opacity:0,transform:"translateY(12px)"},{opacity:1,transform:"none"}],{duration:380});
+  anim(root.querySelector(".sheetwrap"),[{transform:"translateY(-70px)",opacity:0},{transform:"translateY(-70px)",opacity:1,offset:.2},{transform:"none",opacity:1}],{duration:700,easing:"cubic-bezier(.3,.9,.35,1.03)"});
+  anim(root.querySelector(".envelope.sealed"),[{opacity:0,transform:"translate(-24px,6px) rotate(-2deg)"},{opacity:1,transform:"none"}],{duration:420,delay:260,fill:"backwards"});
+}
+
 function buildEditor(host,k,isToday){
   host.dataset.built=k;
   const d=days[k]||{};const id=isToday?"t":"c";
@@ -795,29 +924,47 @@ function buildEditor(host,k,isToday){
   const sh=d.share||{}, withPhoto=canPhoto(), withShare=!!(api&&api.share&&shareState.joined);
   let photo=d.photo||null; // what this entry will be saved with
   host.innerHTML=`
-    <div class="entryhead"><span class="label">${isToday?"Today":esc(fmtDate(k))} · day ${countFor(k)}</span><span class="hint" id="${id}-req"></span></div>
-    <div class="paper" id="${id}-paper"><div class="prefix">Today I…</div><textarea id="${id}-text" aria-label="Today I"></textarea>${withPhoto?`<div class="photoslot" id="${id}-photo"></div>`:""}</div>
-    <div class="chips" id="${id}-tags">${tagList.map(t=>`<button class="chip" data-tag="${esc(t)}" aria-pressed="${chosen.has(t)}">${esc(t)}</button>`).join("")}</div>
-    <div class="row">
-      <button class="core-toggle" id="${id}-core" aria-pressed="${!!d.core}">${STAR}<span>Core memory</span></button>
-      <div class="grow" id="${id}-titlewrap" ${d.core?"":"hidden"}><input type="text" id="${id}-title" placeholder="Give it a name" maxlength="80"></div>
+    <div class="pad" id="${id}-pad">
+      <div class="binding" aria-hidden="true"></div>
+      <div class="sheet" id="${id}-paper"><div class="leaf">
+        <div class="sheethead"><span class="label">${esc(pageDate(k))}</span><span class="label">Day ${countFor(k)}</span></div>
+        <div class="prefix">Today I…</div>
+        <textarea id="${id}-text" aria-label="Today I"></textarea>
+        ${withPhoto?`<div class="photoslot" id="${id}-photo"></div>`:""}
+        <div class="sheetfoot">
+          <div class="chips" id="${id}-tags">${tagList.map(t=>`<button class="chip" data-tag="${esc(t)}" aria-pressed="${chosen.has(t)}">${esc(t)}</button>`).join("")}</div>
+          <div class="row">
+            <button class="core-toggle" id="${id}-core" aria-pressed="${!!d.core}">${STAR}<span>Core memory</span></button>
+            <div class="grow" id="${id}-titlewrap" ${d.core?"":"hidden"}><input type="text" id="${id}-title" placeholder="Give it a name" maxlength="80"></div>
+          </div>
+        </div>
+      </div></div>
     </div>
-    ${withShare?`<div class="sharebox">
-      <div class="row"><span class="label grow">Friends</span><span class="hint">They see that you wrote${isToday?" today":" this day"}.</span></div>
-      <label class="check"><input type="checkbox" id="${id}-shLine"${sh.line?" checked":""}> Share a line from this entry</label>
-      <input type="text" id="${id}-snip" maxlength="280" placeholder="The line your friends see, after “Today I…”" aria-label="Line to share"${sh.line?"":" hidden"}>
-      <label class="check" id="${id}-shPhotoWrap" hidden><input type="checkbox" id="${id}-shPhoto"${sh.photo?" checked":""}> Share the photo</label>
+    ${withShare?`<div class="mail" id="${id}-mail">
+      <div class="slip" id="${id}-slip"${sh.line?"":" hidden"}><span class="label">Today I…</span><input type="text" id="${id}-snip" maxlength="280" placeholder="the part your friends read" aria-label="Line to send to friends"></div>
+      <div class="envelope"><i class="flap" aria-hidden="true"></i>
+        <div class="envbody">
+          <div><div class="label">To your friends</div><div class="hint">They see that you wrote${isToday?" today":" this day"}. Nothing from the page goes to them unless you put it in here.</div></div>
+          <label class="check"><input type="checkbox" id="${id}-shLine"${sh.line?" checked":""}> Put a line from this page in the envelope</label>
+          <label class="check" id="${id}-shPhotoWrap" hidden><input type="checkbox" id="${id}-shPhoto"${sh.photo?" checked":""}> Put the photo in too</label>
+          <span class="hint" id="${id}-mailhint"></span>
+        </div>
+        <i class="flap2" aria-hidden="true"></i><span class="stamp" aria-hidden="true">29</span>
+      </div>
     </div>`:""}
-    <div class="row"><button class="save" id="${id}-save">Save entry</button><span class="saved" id="${id}-saved"></span><span class="hint">⌘↩ to save</span></div>`;
+    <div class="row" id="${id}-actions"><button class="save" id="${id}-save">Tear off and file</button><span class="hint" id="${id}-req"></span><span class="saved" id="${id}-saved"></span>
+      ${hasEntry(k)?`<span class="grow"></span><button class="linkbtn" id="${id}-back">Put it back unchanged</button>`:""}</div>`;
   const ta=$(id+"-text"),ct=$(id+"-core"),tt=$(id+"-title"),sv=$(id+"-save");
   ta.placeholder=isToday?"…write at least one sentence about the main thing that happened.":"…what happened this day?";
   ta.value=draft??(d.text||"");tt.value=d.coreTitle||"";
   const dirty=()=>{$(id+"-saved").textContent=hasEntry(k)?"Unsaved changes":""};
-  const check=()=>{const ok=!!photo||validText(ta.value);sv.disabled=!ok;$(id+"-req").textContent=ok?(hasEntry(k)?"Saved entry · edit freely":"Ready to save"):withPhoto?"At least one sentence, or a photo":"At least one sentence"};
+  const check=()=>{const ok=!!photo||validText(ta.value);sv.disabled=!ok;$(id+"-req").textContent=ok?"⌘↩ to file":withPhoto?"Write a sentence or add a photo first":"Write a sentence first"};
   ta.oninput=()=>{check();$(id+"-saved").textContent="";if(isToday)ui.set("draft:"+k,ta.value)};
   ta.onkeydown=e=>{if(e.key==="Enter"&&(e.metaKey||e.ctrlKey)){e.preventDefault();sv.click()}};
   $(id+"-tags").querySelectorAll(".chip").forEach(b=>b.onclick=()=>{b.setAttribute("aria-pressed",String(b.getAttribute("aria-pressed")!=="true"));dirty()});
   ct.onclick=()=>{const on=ct.getAttribute("aria-pressed")!=="true";ct.setAttribute("aria-pressed",String(on));$(id+"-titlewrap").hidden=!on;if(on)tt.focus()};
+  const back=$(id+"-back");
+  if(back)back.onclick=()=>{if(isToday){ui.del("draft:"+k);sheetOut=null;buildFiled(host,k,true)}else renderDetail()};
 
   // a photo of a paper journal page, instead of or as well as the sentence
   const slot=$(id+"-photo");
@@ -825,7 +972,7 @@ function buildEditor(host,k,isToday){
   function renderSlot(){
     slot.innerHTML=photo
       ?`<img data-photo="${esc(photo)}" alt="Photo of your journal page" title="Double-click to open it in Preview"><div class="row"><button class="linkbtn" data-act="add">Replace photo</button><button class="linkbtn" data-act="remove">Remove photo</button><span class="hint pm"></span></div>`
-      :`<div class="row"><button class="addphoto" data-act="add">${CAMERA}<span>Add a photo of your paper journal</span></button><span class="hint pm">or drop one here</span></div>`;
+      :`<div class="row"><button class="addphoto" data-act="add">${CAMERA}<span>Add a photo of your paper journal</span></button><span class="hint pm">or drop one on the page</span></div>`;
     hydratePhotos(slot);
     slot.querySelector('[data-act="add"]').onclick=()=>addPhoto(()=>api.photo.pick());
     const rm=slot.querySelector('[data-act="remove"]');
@@ -836,7 +983,7 @@ function buildEditor(host,k,isToday){
     photoMsg("Adding the photo…");
     let r=null;
     try{r=await get()}catch(e){r={error:"That file couldn't be opened as a picture."}}
-    if(!r){photoMsg(photo?"":"or drop one here");return}
+    if(!r){photoMsg(photo?"":"or drop one on the page");return}
     if(r.error){photoMsg(r.error);return}
     try{
       const c=await cleanPhoto(r.dataUrl);
@@ -852,33 +999,50 @@ function buildEditor(host,k,isToday){
     paper.ondrop=e=>{e.preventDefault();paper.classList.remove("over");const f=e.dataTransfer.files[0];if(f)addPhoto(()=>api.photo.importFile(f))};
   }
 
-  // what friends see from this entry (nothing beyond "wrote" unless turned on here)
+  // the envelope: what friends get from this page (nothing beyond "wrote" unless it's put in here)
   function syncShare(){
     if(!withShare)return;
+    const on=$(id+"-shLine").checked;
     $(id+"-shPhotoWrap").hidden=!photo;
-    $(id+"-snip").hidden=!$(id+"-shLine").checked;
+    $(id+"-slip").hidden=!on;
+    $(id+"-mailhint").textContent=on?"It goes out when you file the page.":"To send only part of the page, select it first.";
   }
   if(withShare){
-    $(id+"-snip").value=sh.line||"";
-    $(id+"-shLine").onchange=()=>{const on=$(id+"-shLine").checked;if(on&&!$(id+"-snip").value.trim())$(id+"-snip").value=firstSentence(ta.value);syncShare();if(on)$(id+"-snip").focus();dirty()};
-    $(id+"-snip").oninput=dirty;$(id+"-shPhoto").onchange=dirty;
+    const snip=$(id+"-snip");
+    snip.value=sh.line||"";
+    $(id+"-shLine").onchange=()=>{
+      const on=$(id+"-shLine").checked;
+      if(on){
+        // the words you selected on the page, or else its first sentence
+        const part=ta.value.slice(ta.selectionStart,ta.selectionEnd).replace(/\s+/g," ").trim();
+        if(part)snip.value=clip(part,280);else if(!snip.value.trim())snip.value=firstSentence(ta.value);
+      }
+      syncShare();if(on)snip.focus();dirty();
+    };
+    snip.oninput=dirty;$(id+"-shPhoto").onchange=dirty;
   }
   if(slot)renderSlot();else syncShare();
 
-  sv.onclick=()=>{
-    if(!photo&&!validText(ta.value))return;
+  let filing=false;
+  sv.onclick=async()=>{
+    if(filing||(!photo&&!validText(ta.value)))return;
     const core=ct.getAttribute("aria-pressed")==="true";
     const tags=sortTags([...$(id+"-tags").querySelectorAll('.chip[aria-pressed="true"]')].map(b=>b.dataset.tag));
     const share=withShare?{line:$(id+"-shLine").checked?clip($(id+"-snip").value.trim(),280):"",photo:!!photo&&$(id+"-shPhoto").checked}:days[k]?.share;
     days[k]={...(days[k]||{}),text:ta.value.trim(),tags,core,coreTitle:core?tt.value.trim():"",photo,n:countFor(k),updatedAt:Date.now(),...(share?{share}:{})};
-    if(isToday)ui.del("draft:"+k);
+    if(k===todayKey()){ui.del("draft:"+k);sheetOut=null}
     persist();
     pushShare(k);
     if(k!==todayKey()&&hasEntry(todayKey()))pushShare(todayKey()); // filling in a missed day can lengthen today's streak
-    if(isToday){renderToday();$(id+"-saved").textContent=core?"Saved as a core memory":"Saved";check()}
-    else{if(k===todayKey())$("todayEntry").dataset.built="";renderToday();renderCal()}
+    filing=true;sv.disabled=true;
+    if(!isToday&&k===todayKey())$("todayEntry").dataset.built="";
+    renderToday(); // the counts and streak update right away; the sheet is filed once it's torn off
+    await tearAndFile(id,k,withShare&&!!(share.line||share.photo));
+    if(isToday){if(host.dataset.built===k)buildFiled(host,k,true)}
+    else{renderCal();arriveFolder($("calDetail"))}
   };
   check();
+  if(isToday&&!hasEntry(k)&&freshFor!==k&&!curtainUp&&!$("v-today").hidden){freshFor=k;layFreshSheet()}
 }
 
 /* ---------- calendar ---------- */
@@ -915,19 +1079,11 @@ function renderDetail(){
   if(!selKey){
     if(calTag){const n=Object.keys(days).filter(k=>hasEntry(k)&&(days[k].tags||[]).includes(calTag)).length;host.innerHTML=`<p class="hint">${n} day${n===1?"":"s"} tagged ${esc(calTag)} in total.</p>`;return}
     host.innerHTML=`<p class="hint">Click a day to read its entry, or fill in one you missed.</p>`;return}
-  const d=days[selKey];
   const editor=()=>{host.innerHTML="";const e=document.createElement("div");e.className="entry";host.appendChild(e);buildEditor(e,selKey,false)};
   if(!hasEntry(selKey))return editor();
-  host.innerHTML=`<div class="paper" style="display:grid;gap:10px">
-    <div class="row"><h3 class="grow">${fmtDate(selKey)}</h3><span class="label">day ${countFor(selKey)}</span></div>
-    ${d.core?`<div class="coreline">${STAR}<span>${esc(d.coreTitle||"Core memory")}</span></div>`:""}
-    ${hasText(selKey)?`<div class="read"><em>Today I</em> ${esc(d.text)}</div>`:""}
-    ${photoTag(d.photo)}
-    ${chipsStatic(tagsOf(selKey))}
-    ${sharedNote(d)}
-    <div><button class="ghost" id="editDay">Edit</button></div></div>`;
+  host.innerHTML=folderHTML(selKey,`<span class="label grow">Filed away</span><button class="ghost" id="editDay">Take it out</button>`)+sentHTML(selKey);
   hydratePhotos(host);
-  $("editDay").onclick=editor;
+  $("editDay").onclick=()=>{editor();pullOut($("c-paper"))};
 }
 $("prevM").onclick=()=>{let[y,m]=viewMonth;m--;if(m<1){m=12;y--}viewMonth=[y,m];renderCal()};
 $("nextM").onclick=()=>{let[y,m]=viewMonth;m++;if(m>12){m=1;y++}viewMonth=[y,m];renderCal()};
@@ -1345,11 +1501,6 @@ function pushShare(k){
   // the day number only if you chose to show it: with the date, it gives away your birthday
   api.share.push({day:k,count:settings.shareCount?countFor(k):null,streak:streakAt(k),snippet:s.line||null,photo:s.photo&&d.photo?d.photo:null})
     .then(r=>{if(r&&r.ok&&r.data)shareState.unsent=r.data.unsent||0}).catch(()=>{});
-}
-function sharedNote(d){
-  if(!shareState.joined||!d.share)return "";
-  const what=[d.share.line?"a line":"",d.share.photo&&d.photo?"the photo":""].filter(Boolean);
-  return what.length?`<span class="hint">Shared with friends: ${what.join(" and ")}.</span>`:"";
 }
 const yesterdayKey=()=>fromDn(kdn(todayKey())-1);
 const friendDone=f=>!!f.posts[0]&&f.posts[0].day>=todayKey(); // their date, which can run ahead of yours

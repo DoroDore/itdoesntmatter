@@ -51,7 +51,7 @@ function createWindow() {
     width: 1080, height: 820, minWidth: 440, minHeight: 600,
     title: "Day by Day",
     titleBarStyle: "hiddenInset",
-    backgroundColor: nativeTheme.shouldUseDarkColors ? "#1C1310" : "#CAD8E9",
+    backgroundColor: nativeTheme.shouldUseDarkColors ? "#1C1310" : "#DFE8F3",
     show: false,
     webPreferences: { preload: path.join(__dirname, "preload.js"), contextIsolation: true, nodeIntegration: false }
   });
