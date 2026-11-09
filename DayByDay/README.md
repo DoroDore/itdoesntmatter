@@ -1,6 +1,6 @@
 # Day by Day
 
-Counts the days since your birthday (Dec 29 unless you change it in Settings). Every morning the whole screen asks you to press **It's a new day.** before you can do anything else. After that you write one "Today I…" sentence, or add a photo of your paper journal, and can star days as core memories. With **Friends** you can see whether your friends have written today, and share a line or a photo when you want to.
+Counts the days since your birthday (Dec 29 unless you change it in Settings). The first time you open it each day, the whole screen asks you to press **It's a new day.** before you can do anything else. It never pops up on its own: until you open it, the menu bar card says a new day is waiting. After that you write one "Today I…" sentence, or add a photo of your paper journal, and can star days as core memories. With **Friends** you can see whether your friends have written today, and share a line or a photo when you want to.
 
 ## Install
 
@@ -91,7 +91,7 @@ Everything is in `~/Library/Application Support/Day by Day/`:
 ## Files
 
 - `source/index.html` has the whole interface (views, styles and logic).
-- `source/main.js` opens the window, saves the data file, imports photos and switches to full screen for the new-day prompt.
+- `source/main.js` opens the window, saves the data file, imports photos and switches to full screen for the new-day prompt once you open the window.
 - `source/share.js` is the Friends client (Supabase sign-in, friends, sharing, offline outbox). It runs in the main process, so the page never talks to the network.
 - `source/share-config.json` says which Supabase project Friends uses. It's empty until someone sets it up.
 - `supabase/setup.sql` creates Friends' tables and privacy rules. `supabase/test/` tests them.

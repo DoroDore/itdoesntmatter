@@ -743,7 +743,7 @@ function checkDay(){
     :!la?"Your count starts today.":gap===1?`Yesterday was day ${prev}.`:`It's been ${gap} days since you last checked in.`;
   $("newDayBtn").hidden=false;$("cKeys").hidden=false;
   c.hidden=false;
-  syncTray(); // tells the app a new day is pending before it comes forward
+  syncTray(); // tells the app (and the menu bar card) a new day is pending; it goes full screen once you open the window
   if(api) (api.presentNewDay?api.presentNewDay():api.fullscreen(true));
 }
 function yearSummary(k){

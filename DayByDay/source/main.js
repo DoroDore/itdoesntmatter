@@ -69,7 +69,6 @@ function createWindow() {
   });
   // if you leave full screen while the new day is unacknowledged, it goes right back
   win.on("leave-full-screen", () => { if (trayInfo.pending && !quitting) setTimeout(() => win && win.setFullScreen(true), 400); });
-  win.on("minimize", () => { if (trayInfo.pending && !quitting) setTimeout(presentNewDay, 300); });
   win.on("closed", () => { win = null; });
   win.webContents.setWindowOpenHandler(({ url }) => { shell.openExternal(url); return { action: "deny" }; });
   stayPut(win);
@@ -91,15 +90,17 @@ async function showWindow(tab) {
   if (tab) win.webContents.send("go-tab", tab);
 }
 
-/* ---------- new day: bring the window forward, full screen, wherever you are ---------- */
+/* ---------- new day: full screen, once you open the window ----------
+   A new day never brings the window forward on its own (at midnight, on waking the Mac, or after you minimize it).
+   The new-day screen waits in the window, and the menu bar card shows the day as pending, until you open
+   Day by Day. Then it goes full screen. The window's show and focus events ask the page again (check-day). */
 let presenting = false;
 async function presentNewDay() {
   if (presenting) return;
-  if (win && win.isVisible() && win.isFocused() && win.isFullScreen()) return;
+  if (!win || !win.isVisible() || win.isMinimized() || !win.isFocused() || win.isFullScreen()) return;
   presenting = true;
   try {
     if (pop && pop.isVisible()) hidePopover();
-    await showWindow();
     await new Promise((r) => setTimeout(r, 150));
     if (win && !win.isFullScreen()) win.setFullScreen(true);
   } finally { setTimeout(() => { presenting = false; }, 800); }
